@@ -1,0 +1,87 @@
+version: "3.8"
+
+# =================================================================
+# TubePilot AI — Docker Compose Configuration
+# Optimized for Hostinger KVM 4 VPS (4 vCPU, 16 GB RAM, No GPU)
+# Stateless architecture: No mandatory database or Redis.
+# =================================================================
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: tubepilot_backend
+    restart: unless-stopped
+    environment:
+      - APP_ENV=production
+      - BACKEND_HOST=0.0.0.0
+      - BACKEND_PORT=8000
+      - AI_ENABLED=${AI_ENABLED:-false}
+      - AI_PROVIDER=${AI_PROVIDER:-ollama}
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://ollama:11434}
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-qwen2.5:0.5b}
+      - YOUTUBE_PROVIDER=${YOUTUBE_PROVIDER:-public}
+      - YOUTUBE_API_KEY=${YOUTUBE_API_KEY:-}
+      - CACHE_ENABLED=true
+      - CACHE_TTL_SECONDS=900
+    expose:
+      - "8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2048M
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: tubepilot_frontend
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=/api
+    expose:
+      - "3000"
+    deploy:
+      resources:
+        limits:
+          cpus: "1.5"
+          memory: 1024M
+
+  nginx:
+    image: nginx:alpine
+    container_name: tubepilot_nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - backend
+      - frontend
+
+  # Optional local Ollama profile for users who choose local AI on KVM 4
+  ollama:
+    image: ollama/ollama:latest
+    container_name: tubepilot_ollama
+    profiles: ["ai"]
+    restart: unless-stopped
+    volumes:
+      - ollama_models:/root/.ollama
+    expose:
+      - "11434"
+    deploy:
+      resources:
+        limits:
+          cpus: "3.5"
+          memory: 8192M
+
+volumes:
+  ollama_models:
