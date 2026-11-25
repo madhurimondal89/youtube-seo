@@ -89,9 +89,13 @@ npm run dev
 
 ---
 
-## 🌐 Production Subdomain Deployment
+## 🌐 Production Subdomain Deployment (`seo.freeyoutubetools.com`)
 
-For complete Nginx configuration, SSL certbot setup, and PM2 process management on `seo.freeyoutubetools.com`, please consult [DEPLOYMENT_SUBDOMAIN.md](DEPLOYMENT_SUBDOMAIN.md).
+The platform is engineered to deploy cleanly on `seo.freeyoutubetools.com` without touching the main website `freeyoutubetools.com`:
+- **Coolify + Traefik (Hostinger KVM 4 VPS):** Deploy using [`docker-compose.coolify.yml`](docker-compose.coolify.yml) for zero host port collisions and private internal API routing.
+- **Bare-Metal Ubuntu (PM2 & Nginx):** Consult [`DEPLOYMENT_SUBDOMAIN.md`](DEPLOYMENT_SUBDOMAIN.md) and [`DEPLOYMENT_GUIDE.md`](DEPLOYMENT_GUIDE.md) for automated process management and Nginx reverse proxy configs.
+- **Data Compliance Audit:** Read [`docs/YOUTUBE_DATA_COMPLIANCE.md`](docs/YOUTUBE_DATA_COMPLIANCE.md) for data source provenance and zero-CAPTCHA policies.
+- **Formulas & Heuristics:** Read [`docs/DATA_ACCURACY_FORMULAS.md`](docs/DATA_ACCURACY_FORMULAS.md) for mathematical definitions of all scoring algorithms.
 
 ---
 

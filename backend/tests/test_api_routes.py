@@ -110,3 +110,31 @@ def test_system_settings_api():
     assert "ai_enabled" in data
     assert "ai_provider" in data
     assert "custom_ai_base_url" in data
+    assert "groq_model" in data
+    assert "deepseek_model" in data
+    assert "openrouter_model" in data
+    assert "localai_base_url" in data
+    assert "lmstudio_base_url" in data
+
+def test_system_settings_update_providers():
+    update_payload = {
+        "groq_model": "llama-3.3-70b-versatile",
+        "deepseek_model": "deepseek-chat",
+        "openrouter_model": "meta-llama/llama-3.3-70b-instruct",
+        "localai_base_url": "http://localhost:8080/v1"
+    }
+    resp = client.post("/api/system/settings", json=update_payload)
+    assert resp.status_code == 200
+    get_resp = client.get("/api/system/settings")
+    assert get_resp.status_code == 200
+    data = get_resp.json()
+    assert data["groq_model"] == "llama-3.3-70b-versatile"
+    assert data["deepseek_model"] == "deepseek-chat"
+
+def test_provider_registry_presets():
+    from app.ai.registry import PROVIDER_PRESETS
+    required = ["gemini", "openai", "groq", "deepseek", "openrouter", "ollama", "lmstudio", "localai", "custom"]
+    for prov in required:
+        assert prov in PROVIDER_PRESETS
+        assert "default_model" in PROVIDER_PRESETS[prov]
+        assert "default_url" in PROVIDER_PRESETS[prov]

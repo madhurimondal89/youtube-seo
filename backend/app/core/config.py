@@ -21,16 +21,35 @@ class Settings(BaseSettings):
     ollama_model: str = "qwen2.5:3b"
     ollama_timeout: int = 60
     
+    # AI Providers (Cloud & Dedicated)
     openai_api_key: Optional[str] = None
     openai_model: str = "gpt-4o-mini"
     
     gemini_api_key: Optional[str] = None
     gemini_model: str = "gemini-1.5-flash"
 
-    # Custom / Any OpenAI-Compatible Endpoint (LM Studio, LocalAI, Groq, DeepSeek, OpenRouter, vLLM, etc.)
+    groq_api_key: Optional[str] = None
+    groq_model: str = "llama-3.3-70b-versatile"
+
+    deepseek_api_key: Optional[str] = None
+    deepseek_model: str = "deepseek-chat"
+
+    openrouter_api_key: Optional[str] = None
+    openrouter_model: str = "meta-llama/llama-3.3-70b-instruct"
+
+    localai_base_url: str = "http://localhost:8080/v1"
+    localai_model: str = "gpt-4"
+
+    lmstudio_base_url: str = "http://localhost:1234/v1"
+    lmstudio_model: str = "local-model"
+
+    # Custom / Any OpenAI-Compatible Endpoint
     custom_ai_base_url: str = "http://localhost:1234/v1"
     custom_ai_model: str = "custom-model"
     custom_ai_api_key: Optional[str] = None
+
+    # Persistent Storage
+    database_url: str = "sqlite:///./backend/data/youtube_seo.db"
     
     # YouTube Data
     youtube_provider: str = "public"  # "public", "api", "mock"

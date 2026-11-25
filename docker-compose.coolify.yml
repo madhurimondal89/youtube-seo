@@ -1,0 +1,93 @@
+version: "3.8"
+
+# =================================================================
+# TubePilot AI — Coolify & Traefik Production Docker Compose
+# Target Host: Hostinger KVM 4 VPS (Ubuntu)
+# Target Domain: seo.freeyoutubetools.com
+#
+# Key Features:
+# - Connects to Coolify's external 'coolify' Docker network
+# - Zero host port collisions: NO ports 80/443 or 8000 bound on host
+# - Backend port 8000 is internal-only (never exposed publicly)
+# - Next.js rewrites proxy /api requests to backend:8000 internally
+# - Persistent SQLite storage mapped to Docker named volume
+# =================================================================
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: tubepilot_backend
+    restart: unless-stopped
+    expose:
+      - "8000"
+    environment:
+      - APP_ENV=production
+      - BACKEND_HOST=0.0.0.0
+      - BACKEND_PORT=8000
+      - SECRET_KEY=${SECRET_KEY:-change-this-production-key-secret}
+      - DATABASE_URL=sqlite:///./data/youtube_seo.db
+      - AI_ENABLED=${AI_ENABLED:-false}
+      - AI_PROVIDER=${AI_PROVIDER:-ollama}
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://127.0.0.1:11434}
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-qwen2.5:3b}
+      - GROQ_API_KEY=${GROQ_API_KEY:-}
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:-}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-}
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - YOUTUBE_PROVIDER=${YOUTUBE_PROVIDER:-public}
+      - YOUTUBE_API_KEY=${YOUTUBE_API_KEY:-}
+      - CACHE_ENABLED=true
+      - CACHE_TTL_SECONDS=900
+    volumes:
+      - tubepilot_data:/app/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    networks:
+      - coolify
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2048M
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: tubepilot_frontend
+    restart: unless-stopped
+    expose:
+      - "3000"
+    environment:
+      - NODE_ENV=production
+      - INTERNAL_BACKEND_URL=http://backend:8000
+      - NEXT_PUBLIC_API_URL=/api
+    depends_on:
+      - backend
+    networks:
+      - coolify
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.tubepilot-frontend.rule=Host(`seo.freeyoutubetools.com`)"
+      - "traefik.http.routers.tubepilot-frontend.entrypoints=https"
+      - "traefik.http.routers.tubepilot-frontend.tls=true"
+      - "traefik.http.routers.tubepilot-frontend.tls.certresolver=letsencrypt"
+      - "traefik.http.services.tubepilot-frontend.loadbalancer.server.port=3000"
+    deploy:
+      resources:
+        limits:
+          cpus: "1.5"
+          memory: 1024M
+
+volumes:
+  tubepilot_data:
+
+networks:
+  coolify:
+    external: true

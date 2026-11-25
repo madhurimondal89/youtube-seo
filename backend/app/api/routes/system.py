@@ -23,6 +23,17 @@ class SettingsUpdateRequest(BaseModel):
     gemini_model: Optional[str] = None
     openai_api_key: Optional[str] = None
     openai_model: Optional[str] = None
+    groq_api_key: Optional[str] = None
+    groq_model: Optional[str] = None
+    deepseek_api_key: Optional[str] = None
+    deepseek_model: Optional[str] = None
+    openrouter_api_key: Optional[str] = None
+    openrouter_model: Optional[str] = None
+    localai_base_url: Optional[str] = None
+    localai_model: Optional[str] = None
+    lmstudio_base_url: Optional[str] = None
+    lmstudio_model: Optional[str] = None
+    database_url: Optional[str] = None
     youtube_provider: Optional[str] = None
     youtube_api_key: Optional[str] = None
 
@@ -73,6 +84,20 @@ async def get_settings():
         "openai_model": settings.openai_model,
         "openai_api_key_masked": mask_key(settings.openai_api_key),
         "has_openai_api_key": bool(settings.openai_api_key),
+        "groq_model": settings.groq_model,
+        "groq_api_key_masked": mask_key(settings.groq_api_key),
+        "has_groq_api_key": bool(settings.groq_api_key),
+        "deepseek_model": settings.deepseek_model,
+        "deepseek_api_key_masked": mask_key(settings.deepseek_api_key),
+        "has_deepseek_api_key": bool(settings.deepseek_api_key),
+        "openrouter_model": settings.openrouter_model,
+        "openrouter_api_key_masked": mask_key(settings.openrouter_api_key),
+        "has_openrouter_api_key": bool(settings.openrouter_api_key),
+        "localai_base_url": settings.localai_base_url,
+        "localai_model": settings.localai_model,
+        "lmstudio_base_url": settings.lmstudio_base_url,
+        "lmstudio_model": settings.lmstudio_model,
+        "database_url": settings.database_url,
         "youtube_provider": settings.youtube_provider,
         "youtube_api_key_masked": mask_key(settings.youtube_api_key),
         "has_youtube_api_key": bool(settings.youtube_api_key),
@@ -102,6 +127,28 @@ async def update_settings(req: SettingsUpdateRequest):
         settings.openai_api_key = req.openai_api_key.strip() or None
     if req.openai_model is not None:
         settings.openai_model = req.openai_model.strip()
+    if req.groq_api_key is not None and req.groq_api_key != "***":
+        settings.groq_api_key = req.groq_api_key.strip() or None
+    if req.groq_model is not None:
+        settings.groq_model = req.groq_model.strip()
+    if req.deepseek_api_key is not None and req.deepseek_api_key != "***":
+        settings.deepseek_api_key = req.deepseek_api_key.strip() or None
+    if req.deepseek_model is not None:
+        settings.deepseek_model = req.deepseek_model.strip()
+    if req.openrouter_api_key is not None and req.openrouter_api_key != "***":
+        settings.openrouter_api_key = req.openrouter_api_key.strip() or None
+    if req.openrouter_model is not None:
+        settings.openrouter_model = req.openrouter_model.strip()
+    if req.localai_base_url is not None:
+        settings.localai_base_url = req.localai_base_url.strip()
+    if req.localai_model is not None:
+        settings.localai_model = req.localai_model.strip()
+    if req.lmstudio_base_url is not None:
+        settings.lmstudio_base_url = req.lmstudio_base_url.strip()
+    if req.lmstudio_model is not None:
+        settings.lmstudio_model = req.lmstudio_model.strip()
+    if req.database_url is not None:
+        settings.database_url = req.database_url.strip()
     if req.youtube_provider is not None:
         settings.youtube_provider = req.youtube_provider.lower().strip()
     if req.youtube_api_key is not None and req.youtube_api_key != "***":
@@ -127,6 +174,17 @@ async def update_settings(req: SettingsUpdateRequest):
             "GEMINI_MODEL": settings.gemini_model,
             "OPENAI_API_KEY": settings.openai_api_key or "",
             "OPENAI_MODEL": settings.openai_model,
+            "GROQ_API_KEY": settings.groq_api_key or "",
+            "GROQ_MODEL": settings.groq_model,
+            "DEEPSEEK_API_KEY": settings.deepseek_api_key or "",
+            "DEEPSEEK_MODEL": settings.deepseek_model,
+            "OPENROUTER_API_KEY": settings.openrouter_api_key or "",
+            "OPENROUTER_MODEL": settings.openrouter_model,
+            "LOCALAI_BASE_URL": settings.localai_base_url,
+            "LOCALAI_MODEL": settings.localai_model,
+            "LMSTUDIO_BASE_URL": settings.lmstudio_base_url,
+            "LMSTUDIO_MODEL": settings.lmstudio_model,
+            "DATABASE_URL": settings.database_url,
             "YOUTUBE_PROVIDER": settings.youtube_provider,
             "YOUTUBE_API_KEY": settings.youtube_api_key or "",
         }

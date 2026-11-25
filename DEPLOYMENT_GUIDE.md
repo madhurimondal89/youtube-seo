@@ -37,7 +37,21 @@ nano .env # configure desired settings
 
 ---
 
-## 3. Process Management via PM2
+## 3. Deployment Options
+
+### Option A: Coolify + Traefik on Hostinger VPS (Recommended)
+If you run Coolify on your Hostinger KVM 4 VPS:
+1. In Coolify, create a new resource -> **Docker Compose**.
+2. Point to repository `https://github.com/madhurimondal89/youtube-seo.git` on branch `main`.
+3. Set Compose file path to: `docker-compose.coolify.yml`.
+4. Domain: `seo.freeyoutubetools.com`.
+5. Why this works cleanly:
+   - Does not bind host ports 80/443 (avoids Traefik collision).
+   - Does not expose backend port 8000 publicly.
+   - Joins the external `coolify` Docker network automatically.
+   - Next.js proxies `/api/*` requests internally to `http://backend:8000`.
+
+### Option B: Bare-Metal Ubuntu with PM2 & Nginx
 
 ```bash
 npm install -g pm2

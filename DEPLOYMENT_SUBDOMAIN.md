@@ -75,7 +75,7 @@ NEXT_PUBLIC_API_URL=https://seo.freeyoutubetools.com/api
 
 ### 4. Running with PM2 / Systemd
 
-#### Option A: PM2 (Recommended for Node & Python)
+#### Option A: PM2 (Recommended for Bare-Metal Ubuntu)
 ```bash
 # 1. Install PM2 globally
 npm install -g pm2
@@ -97,6 +97,19 @@ pm2 start "npm start" --name "yt-seo-frontend"
 pm2 save
 pm2 startup
 ```
+
+#### Option B: Coolify + Traefik (Hostinger KVM 4 VPS with Coolify)
+If your Hostinger VPS is running Coolify with Traefik:
+1. In Coolify Dashboard, click **Add Resource** -> **Docker Compose**.
+2. Select your repository `https://github.com/madhurimondal89/youtube-seo.git` on branch `main`.
+3. Set the Compose file path to: `docker-compose.coolify.yml`.
+4. Ensure the domain is set to `seo.freeyoutubetools.com`.
+5. Benefits of `docker-compose.coolify.yml`:
+   - Connects seamlessly to Coolify's external `coolify` network.
+   - Zero port conflicts with Traefik: host ports 80/443 and 8000 are **NOT** bound on the host.
+   - Backend port 8000 is internal-only to Docker, fully isolated from public internet.
+   - Next.js automatically rewrites `/api/*` to `http://backend:8000/api/*` internally.
+   - Automatic SSL termination via Let's Encrypt managed by Traefik.
 
 ---
 

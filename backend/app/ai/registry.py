@@ -61,6 +61,13 @@ PROVIDER_PRESETS = {
         "default_url": "http://localhost:1234/v1",
         "requires_key": False,
     },
+    "localai": {
+        "name": "LocalAI",
+        "type": "openai_compatible",
+        "default_model": "gpt-4",
+        "default_url": "http://localhost:8080/v1",
+        "requires_key": False,
+    },
     "custom": {
         "name": "Custom OpenAI-Compatible",
         "type": "openai_compatible",
@@ -138,21 +145,41 @@ class ProviderRegistry:
                 base_url=settings.ollama_base_url,
                 model=settings.ollama_model,
             )
-        elif ptype in ["groq", "deepseek", "openrouter", "lmstudio", "custom"]:
-            # All of these speak standard OpenAI chat completions
-            base_url = settings.custom_ai_base_url
-            model = settings.custom_ai_model
-            api_key = settings.custom_ai_api_key
-
-            # Preset defaults if custom URL is empty
-            if ptype in PROVIDER_PRESETS and not base_url:
-                base_url = PROVIDER_PRESETS[ptype]["default_url"]
-                model = PROVIDER_PRESETS[ptype]["default_model"]
-
+        elif ptype == "groq":
             primary = CustomOpenAICompatibleProvider(
-                base_url=base_url,
-                model=model,
-                api_key=api_key,
+                base_url=PROVIDER_PRESETS["groq"]["default_url"],
+                model=settings.groq_model or PROVIDER_PRESETS["groq"]["default_model"],
+                api_key=settings.groq_api_key or settings.custom_ai_api_key or "",
+            )
+        elif ptype == "deepseek":
+            primary = CustomOpenAICompatibleProvider(
+                base_url=PROVIDER_PRESETS["deepseek"]["default_url"],
+                model=settings.deepseek_model or PROVIDER_PRESETS["deepseek"]["default_model"],
+                api_key=settings.deepseek_api_key or settings.custom_ai_api_key or "",
+            )
+        elif ptype == "openrouter":
+            primary = CustomOpenAICompatibleProvider(
+                base_url=PROVIDER_PRESETS["openrouter"]["default_url"],
+                model=settings.openrouter_model or PROVIDER_PRESETS["openrouter"]["default_model"],
+                api_key=settings.openrouter_api_key or settings.custom_ai_api_key or "",
+            )
+        elif ptype == "lmstudio":
+            primary = CustomOpenAICompatibleProvider(
+                base_url=settings.lmstudio_base_url or PROVIDER_PRESETS["lmstudio"]["default_url"],
+                model=settings.lmstudio_model or PROVIDER_PRESETS["lmstudio"]["default_model"],
+                api_key=settings.custom_ai_api_key or "",
+            )
+        elif ptype == "localai":
+            primary = CustomOpenAICompatibleProvider(
+                base_url=settings.localai_base_url or PROVIDER_PRESETS["localai"]["default_url"],
+                model=settings.localai_model or PROVIDER_PRESETS["localai"]["default_model"],
+                api_key=settings.custom_ai_api_key or "",
+            )
+        elif ptype == "custom":
+            primary = CustomOpenAICompatibleProvider(
+                base_url=settings.custom_ai_base_url,
+                model=settings.custom_ai_model,
+                api_key=settings.custom_ai_api_key,
             )
         else:
             primary = DisabledAIProvider()
@@ -171,6 +198,31 @@ class ProviderRegistry:
             test_prov = OptionalOpenAIProvider(api_key=api_key or settings.openai_api_key or "", model=model or settings.openai_model)
         elif ptype == "ollama":
             test_prov = LocalOllamaProvider(base_url=base_url or settings.ollama_base_url, model=model or settings.ollama_model)
+        elif ptype == "groq":
+            target_url = base_url or PROVIDER_PRESETS["groq"]["default_url"]
+            target_model = model or settings.groq_model or PROVIDER_PRESETS["groq"]["default_model"]
+            target_key = api_key or settings.groq_api_key or settings.custom_ai_api_key
+            test_prov = CustomOpenAICompatibleProvider(base_url=target_url, model=target_model, api_key=target_key)
+        elif ptype == "deepseek":
+            target_url = base_url or PROVIDER_PRESETS["deepseek"]["default_url"]
+            target_model = model or settings.deepseek_model or PROVIDER_PRESETS["deepseek"]["default_model"]
+            target_key = api_key or settings.deepseek_api_key or settings.custom_ai_api_key
+            test_prov = CustomOpenAICompatibleProvider(base_url=target_url, model=target_model, api_key=target_key)
+        elif ptype == "openrouter":
+            target_url = base_url or PROVIDER_PRESETS["openrouter"]["default_url"]
+            target_model = model or settings.openrouter_model or PROVIDER_PRESETS["openrouter"]["default_model"]
+            target_key = api_key or settings.openrouter_api_key or settings.custom_ai_api_key
+            test_prov = CustomOpenAICompatibleProvider(base_url=target_url, model=target_model, api_key=target_key)
+        elif ptype == "lmstudio":
+            target_url = base_url or settings.lmstudio_base_url or PROVIDER_PRESETS["lmstudio"]["default_url"]
+            target_model = model or settings.lmstudio_model or PROVIDER_PRESETS["lmstudio"]["default_model"]
+            target_key = api_key or settings.custom_ai_api_key
+            test_prov = CustomOpenAICompatibleProvider(base_url=target_url, model=target_model, api_key=target_key)
+        elif ptype == "localai":
+            target_url = base_url or settings.localai_base_url or PROVIDER_PRESETS["localai"]["default_url"]
+            target_model = model or settings.localai_model or PROVIDER_PRESETS["localai"]["default_model"]
+            target_key = api_key or settings.custom_ai_api_key
+            test_prov = CustomOpenAICompatibleProvider(base_url=target_url, model=target_model, api_key=target_key)
         else:
             target_url = base_url or settings.custom_ai_base_url
             target_model = model or settings.custom_ai_model
