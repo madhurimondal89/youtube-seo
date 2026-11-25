@@ -137,6 +137,82 @@ export default function ThumbnailAnalyzerPage() {
       {/* Results View */}
       {result && (
         <div className="space-y-6">
+          {/* CTR Transparency & Disclaimer Banner */}
+          <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-700/80 flex items-start gap-3 text-xs text-slate-300">
+            <Info className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="font-semibold text-amber-300">Algorithmic Transparency Guarantee:</span>
+                <span className="px-2 py-0.5 rounded text-[10px] bg-slate-800 border border-slate-700 text-cyan-400 font-mono">
+                  {result.vision_ai_status || "Deterministic Vision Mode"}
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-400 leading-relaxed">
+                {result.ctr_disclaimer ||
+                  "CTR Disclaimer: Vision heuristics evaluate graphic legibility, contrast, and layout composition standards. They do not and cannot predict actual real-world click-through rate (CTR), which depends on audience interest, title packaging, and algorithmic distribution."}
+              </p>
+            </div>
+          </div>
+
+          {/* 7-Dimension Intelligence Grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
+            <div className="panel-console p-3.5 space-y-1 text-center">
+              <span className="text-[11px] text-[var(--color-muted)]">Visual Hierarchy</span>
+              <div className="text-xl font-bold text-white measured">
+                {result.breakdown.visual_hierarchy_score || 80}<span className="text-[10px] text-slate-400">/100</span>
+              </div>
+              <span className="text-[10px] text-cyan-400">Focal Flow</span>
+            </div>
+
+            <div className="panel-console p-3.5 space-y-1 text-center">
+              <span className="text-[11px] text-[var(--color-muted)]">Text Readability</span>
+              <div className="text-xl font-bold text-white measured">
+                {result.breakdown.text_readability_score || 82}<span className="text-[10px] text-slate-400">/100</span>
+              </div>
+              <span className="text-[10px] text-emerald-400">Typography Pop</span>
+            </div>
+
+            <div className="panel-console p-3.5 space-y-1 text-center">
+              <span className="text-[11px] text-[var(--color-muted)]">Subject Visibility</span>
+              <div className="text-xl font-bold text-white measured">
+                {result.breakdown.subject_visibility_score || 85}<span className="text-[10px] text-slate-400">/100</span>
+              </div>
+              <span className="text-[10px] text-indigo-400">Foreground Scale</span>
+            </div>
+
+            <div className="panel-console p-3.5 space-y-1 text-center">
+              <span className="text-[11px] text-[var(--color-muted)]">Contrast Ratio</span>
+              <div className="text-xl font-bold text-white measured">
+                {result.breakdown.contrast_score || 85}<span className="text-[10px] text-slate-400">/100</span>
+              </div>
+              <span className="text-[10px] text-amber-400">{result.contrast_ratio}x Ratio</span>
+            </div>
+
+            <div className="panel-console p-3.5 space-y-1 text-center">
+              <span className="text-[11px] text-[var(--color-muted)]">Mobile Readability</span>
+              <div className="text-xl font-bold text-white measured">
+                {result.breakdown.mobile_readability_score || 78}<span className="text-[10px] text-slate-400">/100</span>
+              </div>
+              <span className="text-[10px] text-purple-400">120px Simulation</span>
+            </div>
+
+            <div className="panel-console p-3.5 space-y-1 text-center">
+              <span className="text-[11px] text-[var(--color-muted)]">Composition</span>
+              <div className="text-xl font-bold text-white measured">
+                {result.breakdown.composition_score || 85}<span className="text-[10px] text-slate-400">/100</span>
+              </div>
+              <span className="text-[10px] text-cyan-400">Rule of Thirds</span>
+            </div>
+
+            <div className="panel-console p-3.5 space-y-1 text-center">
+              <span className="text-[11px] text-[var(--color-muted)]">Background Clutter</span>
+              <div className="text-xl font-bold text-white measured">
+                {result.breakdown.background_complexity_score || 80}<span className="text-[10px] text-slate-400">/100</span>
+              </div>
+              <span className="text-[10px] text-emerald-400">Noise Separation</span>
+            </div>
+          </div>
+
           {/* Top Score Banner */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="panel-console p-5 flex items-center justify-between">

@@ -9,6 +9,8 @@ class DataProvenance(str, Enum):
     CALCULATED = "Calculated"        # Derived mathematically from public/official signals
     ESTIMATED = "Estimated"          # Statistical/heuristic estimate
     RELATIVE = "Relative"            # Relative comparative scale (0-100)
+    SAMPLE = "Sample Data"           # Demo or illustrative baseline dataset
+    AI_RECOMMENDATION = "AI Recommendation" # AI/LLM suggested ideation
     UNAVAILABLE = "Unavailable"      # Signal cannot be reliably sourced
 
 class ProvenanceValue(BaseModel):
@@ -24,6 +26,8 @@ class SystemStatus(BaseModel):
     ai_enabled: bool
     ai_provider: str
     ai_status: str
+    ai_mode: str = "Deterministic / Offline Mode"
+    active_model: Optional[str] = None
     youtube_provider: str
     cache_size: int
     uptime_seconds: float

@@ -11,14 +11,21 @@ export default function TopicsPage() {
   const [topic, setTopic] = useState("AI Video Generation");
   const [clusters, setClusters] = useState<TopicCluster[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchClusters = async (t: string) => {
+    if (!t.trim()) return;
     setLoading(true);
+    setError(null);
     try {
       const res = await researchKeyword(t, true, true, 30);
-      setClusters(res.clusters);
-    } catch {
-      // Graceful fallback
+      if (res && res.clusters) {
+        setClusters(res.clusters);
+      } else {
+        setClusters([]);
+      }
+    } catch (err: any) {
+      setError(err.message || "Failed to generate topic clusters. Please verify connection.");
     } finally {
       setLoading(false);
     }
@@ -66,7 +73,26 @@ export default function TopicsPage() {
         </form>
       </div>
 
+      {error && (
+        <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-sm">
+          {error}
+        </div>
+      )}
+
+      {loading && (
+        <div className="p-8 text-center glass-card rounded-xl border border-slate-800 space-y-2">
+          <div className="inline-block w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+          <p className="text-xs text-slate-400">Discovering clusters and evaluating topical authority...</p>
+        </div>
+      )}
+
       {/* Clusters Matrix */}
+      {!loading && clusters.length === 0 && !error && (
+        <div className="p-8 text-center glass-panel rounded-xl text-slate-400 text-sm">
+          No topic clusters generated yet. Enter a niche keyword above and click Build Clusters.
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {clusters.map((cluster, i) => (
           <div key={i} className="glass-card p-6 rounded-xl space-y-4 border border-slate-800">

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -12,13 +12,43 @@ import {
   ArrowRight,
   ShieldCheck,
   Zap,
+  Info,
+  UserCheck,
+  CheckCircle2,
 } from "lucide-react";
 import ScoreGauge from "@/components/common/ScoreGauge";
 import DataProvenanceBadge from "@/components/common/DataProvenanceBadge";
+import { fetchWorkspaceAudits, fetchWorkspaceCompetitors, fetchWorkspaceKeywordProjects } from "@/lib/api";
 
 export default function DashboardPage() {
   const router = useRouter();
   const [seed, setSeed] = useState("");
+  const [auditTarget, setAuditTarget] = useState("");
+  const [realAudits, setRealAudits] = useState<any[]>([]);
+  const [realCompetitors, setRealCompetitors] = useState<any[]>([]);
+  const [realKeywords, setRealKeywords] = useState<any[]>([]);
+  const [hasRealData, setHasRealData] = useState(false);
+
+  useEffect(() => {
+    async function loadWorkspace() {
+      try {
+        const [audits, comps, kws] = await Promise.all([
+          fetchWorkspaceAudits(),
+          fetchWorkspaceCompetitors(),
+          fetchWorkspaceKeywordProjects(),
+        ]);
+        if (audits && audits.length > 0) setRealAudits(audits);
+        if (comps && comps.length > 0) setRealCompetitors(comps);
+        if (kws && kws.length > 0) setRealKeywords(kws);
+        if ((audits && audits.length > 0) || (comps && comps.length > 0) || (kws && kws.length > 0)) {
+          setHasRealData(true);
+        }
+      } catch {
+        // Fall back gracefully to sample demo view with explicit disclosure
+      }
+    }
+    loadWorkspace();
+  }, []);
 
   const handleLaunchResearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,6 +56,19 @@ export default function DashboardPage() {
       router.push(`/keywords?seed=${encodeURIComponent(seed.trim())}`);
     }
   };
+
+  const handleLaunchAudit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!auditTarget.trim()) return;
+    const target = auditTarget.trim();
+    if (target.includes("youtube.com/watch") || target.includes("youtu.be/")) {
+      router.push(`/video-audit?url=${encodeURIComponent(target)}`);
+    } else {
+      router.push(`/channel-audit?channel=${encodeURIComponent(target)}`);
+    }
+  };
+
+  const latestAuditScore = realAudits.length > 0 ? realAudits[0].overall_score : null;
 
   return (
     <div className="max-w-7xl mx-auto space-y-8">
@@ -74,40 +117,78 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      {/* Real vs Sample Data Provenance Banner */}
+      {!hasRealData && (
+        <div className="p-3.5 rounded-lg bg-amber-500/10 border border-amber-500/25 flex items-center justify-between text-xs text-amber-300">
+          <div className="flex items-center gap-2">
+            <Info className="w-4 h-4 shrink-0" />
+            <span>
+              <strong>Sample Demo Showcase:</strong> The telemetry below displays illustrative baseline benchmarks. Run a live video or channel audit to replace them with your channel&apos;s real-time calculated signals.
+            </span>
+          </div>
+          <DataProvenanceBadge provenance="Sample Data" />
+        </div>
+      )}
+
       {/* Primary Telemetry Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Card 1: Benchmark SEO Health */}
         <div className="p-5 rounded-xl bg-[var(--color-paper-2)] border border-[var(--color-rule)] flex items-center justify-between">
           <div className="space-y-1">
-            <span className="text-xs text-[var(--color-muted)] font-normal">Channel SEO health</span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-[var(--color-muted)] font-normal">
+                {hasRealData && latestAuditScore ? "Latest video audit score" : "Benchmark channel SEO health"}
+              </span>
+              <DataProvenanceBadge provenance={hasRealData && latestAuditScore ? "Calculated" : "Sample Data"} />
+            </div>
             <div className="text-2xl font-normal text-[var(--color-ink)] measured">
-              88<span className="text-xs text-[var(--color-muted)] font-normal">/100</span>
+              {latestAuditScore !== null ? latestAuditScore : 88}
+              <span className="text-xs text-[var(--color-muted)] font-normal">/100</span>
             </div>
             <span className="text-[11px] text-[var(--color-ok)] font-normal flex items-center gap-1">
-              <TrendingUp className="w-3 h-3" /> +14 pts from fixes
+              <TrendingUp className="w-3 h-3" />
+              {hasRealData ? "Live verified calculation" : "Sample baseline standard"}
             </span>
           </div>
-          <ScoreGauge score={88} size="sm" />
+          <ScoreGauge score={latestAuditScore !== null ? latestAuditScore : 88} size="sm" />
         </div>
 
-        {/* Card 2: High-Opportunity Niches */}
+        {/* Card 2: Tracked Competitors / Content Gaps */}
         <div className="p-5 rounded-xl bg-[var(--color-paper-2)] border border-[var(--color-rule)] flex items-center justify-between">
           <div className="space-y-1">
-            <span className="text-xs text-[var(--color-muted)] font-normal">Content gaps detected</span>
-            <div className="text-2xl font-normal text-[var(--color-cool)] measured">12 topics</div>
-            <span className="text-[11px] text-[var(--color-muted)]">Uncovered in competitor SERPs</span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-[var(--color-muted)] font-normal">
+                {hasRealData ? "Watchlist competitors" : "Content gaps detected"}
+              </span>
+              <DataProvenanceBadge provenance={hasRealData ? "Public" : "Sample Data"} />
+            </div>
+            <div className="text-2xl font-normal text-[var(--color-cool)] measured">
+              {hasRealData ? `${realCompetitors.length} channels` : "12 topics"}
+            </div>
+            <span className="text-[11px] text-[var(--color-muted)]">
+              {hasRealData ? "Active competitor channels" : "Sample benchmark gap analysis"}
+            </span>
           </div>
           <div className="w-10 h-10 rounded-md bg-[var(--color-paper-3)] border border-[var(--color-rule)] flex items-center justify-center text-[var(--color-cool)]">
             <Layers className="w-5 h-5" />
           </div>
         </div>
 
-        {/* Card 3: Breakout Outlier Multiplier */}
+        {/* Card 3: Outlier Multiplier / Research History */}
         <div className="p-5 rounded-xl bg-[var(--color-paper-2)] border border-[var(--color-rule)] flex items-center justify-between">
           <div className="space-y-1">
-            <span className="text-xs text-[var(--color-muted)] font-normal">Max outlier found</span>
-            <div className="text-2xl font-normal text-[var(--color-accent)] measured">28.4x</div>
-            <span className="text-[11px] text-[var(--color-muted)]">Above channel median views</span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-[var(--color-muted)] font-normal">
+                {hasRealData ? "Saved keyword queries" : "Max outlier multiplier"}
+              </span>
+              <DataProvenanceBadge provenance={hasRealData ? "Calculated" : "Sample Data"} />
+            </div>
+            <div className="text-2xl font-normal text-[var(--color-accent)] measured">
+              {hasRealData ? `${realKeywords.length} seeds` : "28.4x"}
+            </div>
+            <span className="text-[11px] text-[var(--color-muted)]">
+              {hasRealData ? "Researched projects stored" : "Sample above channel median"}
+            </span>
           </div>
           <div className="w-10 h-10 rounded-md bg-[var(--color-paper-3)] border border-[var(--color-rule)] flex items-center justify-center text-[var(--color-accent)]">
             <Zap className="w-5 h-5" />
@@ -117,8 +198,11 @@ export default function DashboardPage() {
         {/* Card 4: Architecture Status */}
         <div className="p-5 rounded-xl bg-[var(--color-paper-2)] border border-[var(--color-rule)] flex items-center justify-between">
           <div className="space-y-1">
-            <span className="text-xs text-[var(--color-muted)] font-normal">Platform mode</span>
-            <div className="text-base font-normal text-[var(--color-ok)]">Zero DB / Stateless</div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-[var(--color-muted)] font-normal">Platform mode</span>
+              <DataProvenanceBadge provenance="Calculated" />
+            </div>
+            <div className="text-base font-normal text-[var(--color-ok)]">Stateless Core</div>
             <span className="text-[11px] text-[var(--color-muted)]">In-memory TTL cache active</span>
           </div>
           <div className="w-10 h-10 rounded-md bg-[var(--color-paper-3)] border border-[var(--color-rule)] flex items-center justify-center text-[var(--color-ok)]">
@@ -127,12 +211,45 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      {/* Quick Live Audit Tool */}
+      <div className="p-6 rounded-xl bg-[var(--color-paper-2)] border border-[var(--color-rule)] space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <h2 className="text-base font-medium text-[var(--color-ink)]">Run Real Live SEO Audit</h2>
+            <p className="text-xs text-[var(--color-muted)]">
+              Analyze any public YouTube video or channel URL for immediate 18-point score and actionable checklist.
+            </p>
+          </div>
+          <DataProvenanceBadge provenance="Public" />
+        </div>
+
+        <form onSubmit={handleLaunchAudit} className="flex flex-col sm:flex-row gap-3 pt-1">
+          <input
+            type="text"
+            value={auditTarget}
+            onChange={(e) => setAuditTarget(e.target.value)}
+            placeholder="Paste YouTube Video URL (https://www.youtube.com/watch?v=...) or Channel handle (@channel)..."
+            className="flex-1 bg-[var(--color-paper-3)] border border-[var(--color-rule)] rounded-md px-4 py-2.5 text-sm text-[var(--color-ink)] placeholder-[var(--color-muted)] focus:outline-none focus:border-[var(--color-rule-2)]"
+          />
+          <button
+            type="submit"
+            className="px-5 py-2.5 rounded-md bg-[var(--color-paper-3)] hover:bg-[var(--color-rule)] border border-[var(--color-rule-2)] text-[var(--color-ink)] text-sm font-medium flex items-center justify-center gap-2 transition-colors"
+          >
+            <Video className="w-4 h-4 text-[var(--color-accent)]" />
+            <span>Audit Now</span>
+          </button>
+        </form>
+      </div>
+
       {/* Feature Modules Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Module 1: Keyword Research */}
         <div className="p-6 rounded-xl bg-[var(--color-paper-2)] border border-[var(--color-rule)] space-y-4">
-          <div className="w-9 h-9 rounded-md bg-[var(--color-paper-3)] border border-[var(--color-rule)] flex items-center justify-center text-[var(--color-accent)]">
-            <Search className="w-4 h-4" />
+          <div className="flex items-center justify-between">
+            <div className="w-9 h-9 rounded-md bg-[var(--color-paper-3)] border border-[var(--color-rule)] flex items-center justify-center text-[var(--color-accent)]">
+              <Search className="w-4 h-4" />
+            </div>
+            <DataProvenanceBadge provenance="Public" />
           </div>
           <h2 className="text-base font-medium text-[var(--color-ink)]">Keyword intelligence</h2>
           <p className="text-xs text-[var(--color-muted)] leading-relaxed">
@@ -148,8 +265,11 @@ export default function DashboardPage() {
 
         {/* Module 2: Video & Channel Audit */}
         <div className="p-6 rounded-xl bg-[var(--color-paper-2)] border border-[var(--color-rule)] space-y-4">
-          <div className="w-9 h-9 rounded-md bg-[var(--color-paper-3)] border border-[var(--color-rule)] flex items-center justify-center text-[var(--color-ok)]">
-            <Video className="w-4 h-4" />
+          <div className="flex items-center justify-between">
+            <div className="w-9 h-9 rounded-md bg-[var(--color-paper-3)] border border-[var(--color-rule)] flex items-center justify-center text-[var(--color-ok)]">
+              <Video className="w-4 h-4" />
+            </div>
+            <DataProvenanceBadge provenance="Calculated" />
           </div>
           <h2 className="text-base font-medium text-[var(--color-ink)]">18-point SEO audit</h2>
           <p className="text-xs text-[var(--color-muted)] leading-relaxed">
@@ -165,8 +285,11 @@ export default function DashboardPage() {
 
         {/* Module 3: AI Studio & Ideation */}
         <div className="p-6 rounded-xl bg-[var(--color-paper-2)] border border-[var(--color-rule)] space-y-4">
-          <div className="w-9 h-9 rounded-md bg-[var(--color-paper-3)] border border-[var(--color-rule)] flex items-center justify-center text-[var(--color-cool)]">
-            <Sparkles className="w-4 h-4" />
+          <div className="flex items-center justify-between">
+            <div className="w-9 h-9 rounded-md bg-[var(--color-paper-3)] border border-[var(--color-rule)] flex items-center justify-center text-[var(--color-cool)]">
+              <Sparkles className="w-4 h-4" />
+            </div>
+            <DataProvenanceBadge provenance="AI Recommendation" />
           </div>
           <h2 className="text-base font-medium text-[var(--color-ink)]">Creator studio and ideation</h2>
           <p className="text-xs text-[var(--color-muted)] leading-relaxed">
@@ -186,14 +309,15 @@ export default function DashboardPage() {
         <div className="space-y-1">
           <span className="text-sm font-medium text-[var(--color-ink)]">Ethical data provenance guarantee</span>
           <p className="text-xs text-[var(--color-muted)]">
-            YouTube SEO never fabricates fake search volumes, CTR, or revenue metrics. All signals are explicitly marked as Official, Public, Calculated, Estimated, or Relative.
+            YouTube SEO never fabricates fake search volumes, CTR, or revenue metrics. All signals are explicitly marked as Official, Public, Calculated, Estimated, Relative, or Sample Data.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
+          <DataProvenanceBadge provenance="Sample Data" />
           <DataProvenanceBadge provenance="Public" />
           <DataProvenanceBadge provenance="Calculated" />
           <DataProvenanceBadge provenance="Estimated" />
-          <DataProvenanceBadge provenance="Relative" />
+          <DataProvenanceBadge provenance="AI Recommendation" />
         </div>
       </div>
     </div>

@@ -11,6 +11,7 @@ export default function AIStudioPage() {
   const [topic, setTopic] = useState("YouTube Automation 2026");
   const [targetKw, setTargetKw] = useState("youtube automation");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   // States
@@ -26,7 +27,9 @@ export default function AIStudioPage() {
   };
 
   const runGenerator = async () => {
+    if (!topic.trim()) return;
     setLoading(true);
+    setError(null);
     try {
       if (tab === "titles") {
         const res = await generateTitleIdeas(topic, targetKw, 12);
@@ -41,8 +44,8 @@ export default function AIStudioPage() {
         const res = await generateHooks(topic, "Creators");
         setHooksResult(res);
       }
-    } catch {
-      // Handled
+    } catch (err: any) {
+      setError(err.message || "Failed to generate AI assets. In deterministic mode, check template inputs.");
     } finally {
       setLoading(false);
     }
@@ -116,6 +119,19 @@ export default function AIStudioPage() {
           <span>{loading ? "Generating..." : "Generate with Heuristic Scoring"}</span>
         </button>
       </div>
+
+      {error && (
+        <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-sm">
+          {error}
+        </div>
+      )}
+
+      {loading && (
+        <div className="p-8 text-center glass-card rounded-xl border border-slate-800 space-y-2">
+          <div className="inline-block w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+          <p className="text-xs text-slate-400">Synthesizing packaging variations with deterministic scoring...</p>
+        </div>
+      )}
 
       {/* Title Generator Tab */}
       {tab === "titles" && titles.length > 0 && (

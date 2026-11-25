@@ -41,6 +41,8 @@ class TopicCluster(BaseModel):
 
 class KeywordResearchRequest(BaseModel):
     seed: str = Field(min_length=1, max_length=120)
+    country: str = "US"
+    language: str = "en"
     include_alphabet_expansion: bool = True
     include_modifiers: bool = True
     include_questions: bool = True
@@ -49,6 +51,9 @@ class KeywordResearchRequest(BaseModel):
 
 class KeywordResearchResponse(BaseModel):
     seed: str
+    country: str = "US"
+    language: str = "en"
+    source: str = "YouTube Public Autocomplete & SERP Signals"
     total_found: int
     keywords: list[KeywordMetricItem]
     clusters: list[TopicCluster] = Field(default_factory=list)

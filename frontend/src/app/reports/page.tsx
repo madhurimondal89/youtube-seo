@@ -8,8 +8,11 @@ import { exportKeywordsToCSV, exportToJSON, exportToMarkdown } from "@/lib/expor
 export default function ReportsPage() {
   const [seed, setSeed] = useState("youtube automation");
   const [status, setStatus] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const handleExport = async (format: "csv" | "json" | "md") => {
+    if (!seed.trim()) return;
+    setLoading(true);
     setStatus(`Generating ${format.toUpperCase()} export...`);
     try {
       const res = await researchKeyword(seed, true, true, 30);
@@ -20,6 +23,8 @@ export default function ReportsPage() {
       setTimeout(() => setStatus(null), 3000);
     } catch {
       setStatus("Export failed. Please check network or seed.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -46,21 +51,24 @@ export default function ReportsPage() {
         <div className="flex flex-col sm:flex-row gap-3 pt-2">
           <button
             onClick={() => handleExport("csv")}
-            className="flex-1 px-4 py-2.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs font-semibold text-slate-200 flex items-center justify-center gap-2"
+            disabled={loading}
+            className="flex-1 px-4 py-2.5 rounded-lg bg-slate-900 hover:bg-slate-800 disabled:opacity-50 border border-slate-700 text-xs font-semibold text-slate-200 flex items-center justify-center gap-2"
           >
             <FileSpreadsheet className="w-4 h-4 text-emerald-400" />
             <span>Export CSV</span>
           </button>
           <button
             onClick={() => handleExport("json")}
-            className="flex-1 px-4 py-2.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs font-semibold text-slate-200 flex items-center justify-center gap-2"
+            disabled={loading}
+            className="flex-1 px-4 py-2.5 rounded-lg bg-slate-900 hover:bg-slate-800 disabled:opacity-50 border border-slate-700 text-xs font-semibold text-slate-200 flex items-center justify-center gap-2"
           >
             <FileCode className="w-4 h-4 text-indigo-400" />
             <span>Export JSON</span>
           </button>
           <button
             onClick={() => handleExport("md")}
-            className="flex-1 px-4 py-2.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs font-semibold text-slate-200 flex items-center justify-center gap-2"
+            disabled={loading}
+            className="flex-1 px-4 py-2.5 rounded-lg bg-slate-900 hover:bg-slate-800 disabled:opacity-50 border border-slate-700 text-xs font-semibold text-slate-200 flex items-center justify-center gap-2"
           >
             <FileText className="w-4 h-4 text-cyan-400" />
             <span>Export Markdown</span>

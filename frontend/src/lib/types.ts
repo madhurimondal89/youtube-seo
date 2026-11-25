@@ -1,4 +1,4 @@
-export type DataProvenance = "Official" | "Public" | "Calculated" | "Estimated" | "Relative" | "Unavailable";
+export type DataProvenance = "Official" | "Public" | "Calculated" | "Estimated" | "Relative" | "Sample Data" | "AI Recommendation" | "Unavailable";
 
 export type SearchIntent =
   | "Informational"
@@ -166,6 +166,8 @@ export interface SystemStatus {
   ai_enabled: boolean;
   ai_provider: string;
   ai_status: string;
+  ai_mode?: string;
+  active_model?: string;
   youtube_provider: string;
   cache_size: number;
   uptime_seconds: number;
@@ -173,11 +175,16 @@ export interface SystemStatus {
 }
 
 export interface VisualScoreBreakdown {
-  aspect_ratio_score: number;
+  visual_hierarchy_score: number;
+  text_readability_score: number;
+  subject_visibility_score: number;
   contrast_score: number;
-  clarity_score: number;
   mobile_readability_score: number;
-  focal_hierarchy_score: number;
+  composition_score: number;
+  background_complexity_score: number;
+  aspect_ratio_score?: number;
+  clarity_score?: number;
+  focal_hierarchy_score?: number;
 }
 
 export interface VisualIssue {
@@ -192,7 +199,7 @@ export interface ThumbnailAnalysisResponse {
   width: number;
   height: number;
   aspect_ratio_label: string;
-  is_standard_hd: boolean;
+  is_standard_hd: bool;
   overall_score: number;
   breakdown: VisualScoreBreakdown;
   dominant_colors: string[];
@@ -202,7 +209,12 @@ export interface ThumbnailAnalysisResponse {
   recommendations: string[];
   mobile_preview_advisory: string;
   data_provenance: string;
+  ctr_disclaimer?: string;
+  vision_ai_status?: string;
+  vision_ai_insights?: string[];
 }
+
+type bool = boolean;
 
 export interface CoachVideoPlan {
   day: number;

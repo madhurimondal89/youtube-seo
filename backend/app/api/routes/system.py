@@ -40,21 +40,37 @@ class SettingsUpdateRequest(BaseModel):
 @router.get("/status", response_model=SystemStatus)
 async def get_system_status():
     from app.api.routes.ai import get_current_ai_provider
-    ai_status = "Disabled"
+    ai_status = "Deterministic / Offline Mode"
+    ai_mode = "Deterministic / Offline Mode"
+    active_model = None
+
     if settings.ai_enabled:
         prov = get_current_ai_provider()
-        if await prov.is_available():
+        active_model = getattr(prov, "model", None) or getattr(prov, "model_name", None)
+        try:
+            is_avail = await prov.is_available()
+        except Exception:
+            is_avail = False
+
+        if is_avail:
             ai_status = f"Active ({prov.get_provider_name()})"
+            ai_mode = "AI Connected"
         else:
             ai_status = f"Configured ({prov.get_provider_name()}) but Offline"
+            ai_mode = "Hybrid Mode"
+    else:
+        ai_mode = "Deterministic / Offline Mode"
+        ai_status = "Deterministic (100% Mathematical)"
 
     return SystemStatus(
         app_name=settings.app_name,
         version=settings.app_version,
         environment=settings.app_env,
         ai_enabled=settings.ai_enabled,
-        ai_provider=settings.ai_provider,
+        ai_provider=settings.ai_provider if settings.ai_enabled else "none",
         ai_status=ai_status,
+        ai_mode=ai_mode,
+        active_model=active_model if settings.ai_enabled else None,
         youtube_provider=settings.youtube_provider,
         cache_size=cache.size(),
         uptime_seconds=round(time.time() - START_TIME, 2),

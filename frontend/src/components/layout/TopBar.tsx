@@ -49,13 +49,26 @@ export default function TopBar() {
           </span>
         </div>
 
-        {/* AI Layer Mode */}
+        {/* 3-State AI Mode Indicator */}
         <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[var(--color-paper-2)] border border-[var(--color-rule)] text-xs">
           <Cpu className="w-3.5 h-3.5 text-[var(--color-accent)]" />
-          <span className="text-[var(--color-muted)]">AI:</span>
-          <span className={`font-medium ${status?.ai_enabled ? "text-[var(--color-ok)]" : "text-[var(--color-muted)]"}`}>
-            {status?.ai_enabled ? status.ai_status : "Deterministic"}
-          </span>
+          <span className="text-[var(--color-muted)]">AI Mode:</span>
+          {status?.ai_mode === "AI Connected" ? (
+            <span className="font-semibold text-emerald-400 flex items-center gap-1" title={`Provider: ${status.ai_provider}, Model: ${status.active_model || 'Configured'}`}>
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              AI Connected ({status.active_model || status.ai_provider})
+            </span>
+          ) : status?.ai_mode === "Hybrid Mode" ? (
+            <span className="font-semibold text-amber-400 flex items-center gap-1" title="AI configured but unreachable. Falling back to deterministic mathematical models.">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+              Hybrid Mode (Fallback Active)
+            </span>
+          ) : (
+            <span className="font-semibold text-cyan-400 flex items-center gap-1" title="Zero external AI dependencies. 100% mathematical heuristics.">
+              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
+              Deterministic / Offline Mode
+            </span>
+          )}
         </div>
 
         {/* Backend Heartbeat */}

@@ -11,8 +11,8 @@ class YouTubeProvider(ABC):
     """
 
     @abstractmethod
-    async def get_autocomplete_suggestions(self, query: str) -> list[str]:
-        """Fetch real-time search suggestions for a query."""
+    async def get_autocomplete_suggestions(self, query: str, hl: str = "en", gl: str = "US") -> list[str]:
+        """Fetch real-time search suggestions for a query with optional language and country."""
         pass
 
     @abstractmethod

@@ -26,6 +26,8 @@ function KeywordsContent() {
   const initialSeed = searchParams.get("seed") || "youtube automation";
 
   const [seed, setSeed] = useState(initialSeed);
+  const [country, setCountry] = useState("US");
+  const [language, setLanguage] = useState("en");
   const [includeAlphabet, setIncludeAlphabet] = useState(true);
   const [includeModifiers, setIncludeModifiers] = useState(true);
   const [includeQuestions, setIncludeQuestions] = useState(true);
@@ -54,7 +56,9 @@ function KeywordsContent() {
         includeModifiers,
         45,
         includeQuestions,
-        includeComparisons
+        includeComparisons,
+        country,
+        language
       );
       setData(res);
     } catch (err: any) {
@@ -139,6 +143,43 @@ function KeywordsContent() {
               className="w-full bg-slate-900/90 border border-slate-700/80 rounded-lg pl-10 pr-4 py-2.5 text-sm text-slate-100 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/30"
             />
           </div>
+
+          {/* Country Selector */}
+          <select
+            value={country}
+            onChange={(e) => setCountry(e.target.value)}
+            className="bg-slate-900/90 border border-slate-700/80 rounded-lg px-3 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500"
+            title="Target Geographic Market (GL)"
+          >
+            <option value="US">🇺🇸 United States (US)</option>
+            <option value="IN">🇮🇳 India (IN)</option>
+            <option value="BD">🇧🇩 Bangladesh (BD)</option>
+            <option value="GB">🇬🇧 United Kingdom (GB)</option>
+            <option value="CA">🇨🇦 Canada (CA)</option>
+            <option value="AU">🇦🇺 Australia (AU)</option>
+            <option value="DE">🇩🇪 Germany (DE)</option>
+            <option value="FR">🇫🇷 France (FR)</option>
+            <option value="BR">🇧🇷 Brazil (BR)</option>
+            <option value="JP">🇯🇵 Japan (JP)</option>
+          </select>
+
+          {/* Language Selector */}
+          <select
+            value={language}
+            onChange={(e) => setLanguage(e.target.value)}
+            className="bg-slate-900/90 border border-slate-700/80 rounded-lg px-3 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500"
+            title="Target Interface Language (HL)"
+          >
+            <option value="en">English (en)</option>
+            <option value="bn">Bengali (বাংলা)</option>
+            <option value="hi">Hindi (हिन्दी)</option>
+            <option value="es">Spanish (es)</option>
+            <option value="fr">French (fr)</option>
+            <option value="de">German (de)</option>
+            <option value="pt">Portuguese (pt)</option>
+            <option value="ja">Japanese (ja)</option>
+          </select>
+
           <button
             type="submit"
             disabled={loading}
@@ -149,43 +190,55 @@ function KeywordsContent() {
           </button>
         </form>
 
-        <div className="flex flex-wrap items-center gap-4 text-xs text-slate-400 pt-1 border-t border-slate-800/80">
-          <label className="flex items-center gap-2 cursor-pointer select-none">
-            <input
-              type="checkbox"
-              checked={includeAlphabet}
-              onChange={(e) => setIncludeAlphabet(e.target.checked)}
-              className="rounded border-slate-700 bg-slate-900 text-indigo-600 focus:ring-0"
-            />
-            <span>Alphabet Expansion (A-Z tree)</span>
-          </label>
-          <label className="flex items-center gap-2 cursor-pointer select-none">
-            <input
-              type="checkbox"
-              checked={includeModifiers}
-              onChange={(e) => setIncludeModifiers(e.target.checked)}
-              className="rounded border-slate-700 bg-slate-900 text-indigo-600 focus:ring-0"
-            />
-            <span>Intent Modifiers (How-to, vs, best, tutorial)</span>
-          </label>
-          <label className="flex items-center gap-2 cursor-pointer select-none">
-            <input
-              type="checkbox"
-              checked={includeQuestions}
-              onChange={(e) => setIncludeQuestions(e.target.checked)}
-              className="rounded border-slate-700 bg-slate-900 text-indigo-600 focus:ring-0"
-            />
-            <span>Question Tree (Why, Can, What)</span>
-          </label>
-          <label className="flex items-center gap-2 cursor-pointer select-none">
-            <input
-              type="checkbox"
-              checked={includeComparisons}
-              onChange={(e) => setIncludeComparisons(e.target.checked)}
-              className="rounded border-slate-700 bg-slate-900 text-indigo-600 focus:ring-0"
-            />
-            <span>Comparison Modifiers (vs, or, alternative)</span>
-          </label>
+        {/* Source Transparency & Guarantees */}
+        <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400 pt-2 border-t border-slate-800/80">
+          <div className="flex flex-wrap items-center gap-4">
+            <label className="flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={includeAlphabet}
+                onChange={(e) => setIncludeAlphabet(e.target.checked)}
+                className="rounded border-slate-700 bg-slate-900 text-indigo-600 focus:ring-0"
+              />
+              <span>Alphabet Expansion (A-Z tree)</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={includeModifiers}
+                onChange={(e) => setIncludeModifiers(e.target.checked)}
+                className="rounded border-slate-700 bg-slate-900 text-indigo-600 focus:ring-0"
+              />
+              <span>Intent Modifiers (How-to, vs, best, tutorial)</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={includeQuestions}
+                onChange={(e) => setIncludeQuestions(e.target.checked)}
+                className="rounded border-slate-700 bg-slate-900 text-indigo-600 focus:ring-0"
+              />
+              <span>Question Tree (Why, Can, What)</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={includeComparisons}
+                onChange={(e) => setIncludeComparisons(e.target.checked)}
+                className="rounded border-slate-700 bg-slate-900 text-indigo-600 focus:ring-0"
+              />
+              <span>Comparisons (vs, or, alternative)</span>
+            </label>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="px-2 py-0.5 rounded text-[11px] bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-medium">
+              100% Deduplicated
+            </span>
+            <span className="px-2 py-0.5 rounded text-[11px] bg-slate-800 border border-slate-700 text-slate-300">
+              Source: YouTube Autocomplete ({country}-{language})
+            </span>
+          </div>
         </div>
       </div>
 

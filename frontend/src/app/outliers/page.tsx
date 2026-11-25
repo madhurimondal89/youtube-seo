@@ -10,14 +10,17 @@ export default function OutliersPage() {
   const [channel, setChannel] = useState("@creatoracademy");
   const [outliers, setOutliers] = useState<OutlierVideoItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchOutliers = async (chan: string) => {
+    if (!chan.trim()) return;
     setLoading(true);
+    setError(null);
     try {
       const res = await getOutliers(chan);
-      setOutliers(res);
-    } catch {
-      // Graceful fallback
+      setOutliers(res || []);
+    } catch (err: any) {
+      setError(err.message || "Failed to scan outliers for channel. Please verify channel handle.");
     } finally {
       setLoading(false);
     }
@@ -64,6 +67,25 @@ export default function OutliersPage() {
           </button>
         </form>
       </div>
+
+      {error && (
+        <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-sm">
+          {error}
+        </div>
+      )}
+
+      {loading && (
+        <div className="p-8 text-center glass-card rounded-xl border border-slate-800 space-y-2">
+          <div className="inline-block w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+          <p className="text-xs text-slate-400">Fetching channel videos and computing Median/MAD outlier multiplier...</p>
+        </div>
+      )}
+
+      {!loading && outliers.length === 0 && !error && (
+        <div className="p-8 text-center glass-panel rounded-xl text-slate-400 text-sm">
+          No statistical outliers found for this channel. Try entering a larger creator handle above.
+        </div>
+      )}
 
       {/* Outlier Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

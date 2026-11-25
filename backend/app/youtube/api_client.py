@@ -16,10 +16,10 @@ class OfficialAPIYouTubeProvider(YouTubeProvider):
         self.api_key = api_key
         self.timeout = timeout_seconds
 
-    async def get_autocomplete_suggestions(self, query: str) -> list[str]:
+    async def get_autocomplete_suggestions(self, query: str, hl: str = "en", gl: str = "US") -> list[str]:
         # YouTube Data API v3 does not have autocomplete endpoint, fallback to public suggest
         from app.youtube.autocomplete import autocomplete_client
-        return await autocomplete_client.get_suggestions(query)
+        return await autocomplete_client.get_suggestions(query, hl=hl, gl=gl)
 
     async def search_videos(self, query: str, limit: int = 20) -> list[VideoSearchResult]:
         params = {

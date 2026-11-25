@@ -10,14 +10,17 @@ export default function ContentGapsPage() {
   const [compChan, setCompChan] = useState("@competitor_one");
   const [gaps, setGaps] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchGaps = async () => {
+    if (!userChan.trim() || !compChan.trim()) return;
     setLoading(true);
+    setError(null);
     try {
       const res = await compareCompetitors(userChan, [compChan]);
-      setGaps(res.content_gaps);
-    } catch {
-      // Graceful fallback
+      setGaps(res?.content_gaps || []);
+    } catch (err: any) {
+      setError(err.message || "Failed to compare channels for content gaps.");
     } finally {
       setLoading(false);
     }
@@ -68,6 +71,25 @@ export default function ContentGapsPage() {
           </button>
         </form>
       </div>
+
+      {error && (
+        <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-sm">
+          {error}
+        </div>
+      )}
+
+      {loading && (
+        <div className="p-8 text-center glass-card rounded-xl border border-slate-800 space-y-2">
+          <div className="inline-block w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+          <p className="text-xs text-slate-400">Comparing video catalogs and identifying uncovered competitor content gaps...</p>
+        </div>
+      )}
+
+      {!loading && gaps.length === 0 && !error && (
+        <div className="p-8 text-center glass-panel rounded-xl text-slate-400 text-sm">
+          No content gaps found between these channels. Try searching another competitor handle.
+        </div>
+      )}
 
       <div className="space-y-4">
         {gaps.map((gap, i) => (

@@ -56,7 +56,9 @@ async def expand_keywords(
     include_modifiers: bool = True,
     include_questions: bool = True,
     include_comparisons: bool = True,
-    max_keywords: int = 50
+    max_keywords: int = 50,
+    hl: str = "en",
+    gl: str = "US"
 ) -> list[str]:
     """
     Performs deterministic multi-vector expansion:
@@ -73,7 +75,7 @@ async def expand_keywords(
     collected: dict[str, int] = {clean_seed: 100}  # keyword -> priority score
 
     # 1. Fetch root autocomplete
-    root_suggs = await provider.get_autocomplete_suggestions(clean_seed)
+    root_suggs = await provider.get_autocomplete_suggestions(clean_seed, hl=hl, gl=gl)
     for idx, s in enumerate(root_suggs):
         norm = normalize_keyword(s)
         if norm and norm not in collected:
@@ -84,25 +86,25 @@ async def expand_keywords(
     # 2. Modifiers expansion
     if include_modifiers:
         for prefix in MODIFIER_PREFIXES[:3]:
-            tasks.append(provider.get_autocomplete_suggestions(f"{prefix} {clean_seed}"))
+            tasks.append(provider.get_autocomplete_suggestions(f"{prefix} {clean_seed}", hl=hl, gl=gl))
         for suffix in MODIFIER_SUFFIXES[:3]:
-            tasks.append(provider.get_autocomplete_suggestions(f"{clean_seed} {suffix}"))
+            tasks.append(provider.get_autocomplete_suggestions(f"{clean_seed} {suffix}", hl=hl, gl=gl))
 
     # 3. Question expansion
     if include_questions:
         for q in QUESTION_PREFIXES[:4]:
-            tasks.append(provider.get_autocomplete_suggestions(f"{q} {clean_seed}"))
+            tasks.append(provider.get_autocomplete_suggestions(f"{q} {clean_seed}", hl=hl, gl=gl))
 
     # 4. Comparison expansion
     if include_comparisons:
         for c in COMPARISON_MODIFIERS[:3]:
-            tasks.append(provider.get_autocomplete_suggestions(f"{clean_seed} {c}"))
+            tasks.append(provider.get_autocomplete_suggestions(f"{clean_seed} {c}", hl=hl, gl=gl))
 
     # 5. Alphabet expansion (sample high-yield letters to stay fast and polite)
     if include_alphabet:
         high_yield_letters = ["a", "b", "c", "f", "h", "i", "p", "s", "t", "v", "w"]
         for letter in high_yield_letters:
-            tasks.append(provider.get_autocomplete_suggestions(f"{clean_seed} {letter}"))
+            tasks.append(provider.get_autocomplete_suggestions(f"{clean_seed} {letter}", hl=hl, gl=gl))
 
     if tasks:
         # Run in bounded batches

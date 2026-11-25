@@ -1,8 +1,10 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { fetchSystemStatus } from "@/lib/api";
+import { SystemStatus } from "@/lib/types";
 import {
   LayoutDashboard,
   Search,
@@ -39,6 +41,13 @@ const NAV_ITEMS = [
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const [status, setStatus] = useState<SystemStatus | null>(null);
+
+  useEffect(() => {
+    fetchSystemStatus().then((s) => {
+      if (s) setStatus(s);
+    });
+  }, []);
 
   return (
     <aside className="w-64 h-screen fixed left-0 top-0 border-r border-[var(--color-rule)] bg-[var(--color-paper-3)] flex flex-col z-30">
@@ -85,12 +94,24 @@ export default function Sidebar() {
       <div className="p-4 border-t border-[var(--color-rule)]">
         <div className="p-3 rounded-md bg-[var(--color-paper-2)] border border-[var(--color-rule)] flex flex-col gap-1.5">
           <div className="flex items-center justify-between text-xs">
-            <span className="text-[var(--color-muted)]">System Mode</span>
+            <span className="text-[var(--color-muted)]">Engine Mode</span>
             <span className="text-[var(--color-ok)] font-medium">Stateless Core</span>
           </div>
           <div className="text-[11px] text-[var(--color-muted)] flex items-center justify-between">
-            <span>Runtime</span>
-            <span className="measured text-[var(--color-ink-2)]">Local / KVM</span>
+            <span>AI Status</span>
+            <span className={`font-medium ${
+              status?.ai_mode === "AI Connected"
+                ? "text-emerald-400"
+                : status?.ai_mode === "Hybrid Mode"
+                ? "text-amber-400"
+                : "text-cyan-400"
+            }`}>
+              {status?.ai_mode === "AI Connected"
+                ? "AI Connected"
+                : status?.ai_mode === "Hybrid Mode"
+                ? "Hybrid Fallback"
+                : "Deterministic"}
+            </span>
           </div>
         </div>
       </div>

@@ -37,9 +37,9 @@ class PublicYouTubeProvider(YouTubeProvider):
         """Randomized jitter to avoid burst traffic."""
         await asyncio.sleep(random.uniform(0.15, 0.45))
 
-    async def get_autocomplete_suggestions(self, query: str) -> list[str]:
+    async def get_autocomplete_suggestions(self, query: str, hl: str = "en", gl: str = "US") -> list[str]:
         await self._safe_delay()
-        return await autocomplete_client.get_suggestions(query)
+        return await autocomplete_client.get_suggestions(query, hl=hl, gl=gl)
 
     async def search_videos(self, query: str, limit: int = 20) -> list[VideoSearchResult]:
         await self._safe_delay()

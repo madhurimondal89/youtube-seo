@@ -17,7 +17,7 @@ class MockYouTubeProvider(YouTubeProvider):
         "case study", "review", "free course", "setup guide"
     ]
 
-    async def get_autocomplete_suggestions(self, query: str) -> list[str]:
+    async def get_autocomplete_suggestions(self, query: str, hl: str = "en", gl: str = "US") -> list[str]:
         q = query.strip().lower()
         results = [q]
         for mod in self.MODIFIERS:

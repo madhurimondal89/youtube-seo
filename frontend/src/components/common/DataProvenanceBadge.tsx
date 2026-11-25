@@ -40,6 +40,18 @@ export default function DataProvenanceBadge({ provenance }: Props) {
       text: "text-amber-400",
       border: "border-amber-500/25",
     },
+    "Sample Data": {
+      label: "Sample Demo Data",
+      bg: "bg-orange-500/10",
+      text: "text-orange-400",
+      border: "border-orange-500/25",
+    },
+    "AI Recommendation": {
+      label: "AI Recommendation",
+      bg: "bg-pink-500/10",
+      text: "text-pink-400",
+      border: "border-pink-500/25",
+    },
     Unavailable: {
       label: "Unavailable",
       bg: "bg-slate-500/10",

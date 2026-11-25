@@ -9,14 +9,17 @@ export default function CalendarPage() {
   const [duration, setDuration] = useState(30);
   const [schedule, setSchedule] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchCalendar = async () => {
+    if (!topic.trim()) return;
     setLoading(true);
+    setError(null);
     try {
       const res = await generateCalendar(topic, duration);
-      setSchedule(res.schedule);
-    } catch {
-      // Graceful fallback
+      setSchedule(res?.schedule || []);
+    } catch (err: any) {
+      setError(err.message || "Failed to generate content calendar.");
     } finally {
       setLoading(false);
     }
@@ -77,6 +80,25 @@ export default function CalendarPage() {
           </button>
         </form>
       </div>
+
+      {error && (
+        <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-sm">
+          {error}
+        </div>
+      )}
+
+      {loading && (
+        <div className="p-8 text-center glass-card rounded-xl border border-slate-800 space-y-2">
+          <div className="inline-block w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+          <p className="text-xs text-slate-400">Balancing pillars, evergreen topics, and publishing roadmap...</p>
+        </div>
+      )}
+
+      {!loading && schedule.length === 0 && !error && (
+        <div className="p-8 text-center glass-panel rounded-xl text-slate-400 text-sm">
+          No calendar generated yet. Enter a niche or content pillar above and click Generate Calendar.
+        </div>
+      )}
 
       {/* Calendar Roadmap Timeline */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

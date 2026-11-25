@@ -2,11 +2,17 @@ from pydantic import BaseModel, Field
 from typing import List, Optional
 
 class VisualScoreBreakdown(BaseModel):
-    aspect_ratio_score: int = Field(..., ge=0, le=100)
+    visual_hierarchy_score: int = Field(..., ge=0, le=100)
+    text_readability_score: int = Field(..., ge=0, le=100)
+    subject_visibility_score: int = Field(..., ge=0, le=100)
     contrast_score: int = Field(..., ge=0, le=100)
-    clarity_score: int = Field(..., ge=0, le=100)
     mobile_readability_score: int = Field(..., ge=0, le=100)
-    focal_hierarchy_score: int = Field(..., ge=0, le=100)
+    composition_score: int = Field(..., ge=0, le=100)
+    background_complexity_score: int = Field(..., ge=0, le=100)
+    # Legacy compatibility fields
+    aspect_ratio_score: Optional[int] = 100
+    clarity_score: Optional[int] = 80
+    focal_hierarchy_score: Optional[int] = 80
 
 class VisualIssue(BaseModel):
     severity: str = "warning"  # "critical", "warning", "info"
@@ -29,3 +35,9 @@ class ThumbnailAnalysisResponse(BaseModel):
     recommendations: List[str] = []
     mobile_preview_advisory: str
     data_provenance: str = "Calculated"
+    ctr_disclaimer: str = (
+        "CTR Disclaimer: Vision heuristics evaluate graphic legibility, contrast, and layout composition standards. "
+        "They do not and cannot predict actual real-world click-through rate (CTR), which depends on topic interest, audience targeting, and packaging synergy."
+    )
+    vision_ai_status: str = "Deterministic Vision Mode"
+    vision_ai_insights: Optional[List[str]] = None

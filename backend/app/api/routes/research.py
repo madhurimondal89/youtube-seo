@@ -24,14 +24,14 @@ async def research_keyword(req: KeywordResearchRequest):
     if not clean_seed:
         raise HTTPException(status_code=400, detail="Seed keyword cannot be empty.")
 
-    cache_key = f"kw_res_{clean_seed}_{req.include_alphabet_expansion}_{req.max_keywords}"
+    cache_key = f"kw_res_{clean_seed}_{req.country}_{req.language}_{req.include_alphabet_expansion}_{req.max_keywords}"
     cached = cache.get(cache_key)
     if cached:
         return cached
 
     provider = get_youtube_provider()
 
-    # 1. Expand keywords
+    # 1. Expand keywords with country & language support
     expanded = await expand_keywords(
         seed=clean_seed,
         provider=provider,
@@ -39,7 +39,9 @@ async def research_keyword(req: KeywordResearchRequest):
         include_modifiers=req.include_modifiers,
         include_questions=req.include_questions,
         include_comparisons=req.include_comparisons,
-        max_keywords=req.max_keywords
+        max_keywords=req.max_keywords,
+        hl=req.language,
+        gl=req.country
     )
 
     # 2. Get top SERP evidence for seed to inform overall landscape
@@ -102,6 +104,9 @@ async def research_keyword(req: KeywordResearchRequest):
 
     response = KeywordResearchResponse(
         seed=clean_seed,
+        country=req.country,
+        language=req.language,
+        source="YouTube Public Autocomplete & SERP Signals",
         total_found=len(keyword_metrics),
         keywords=keyword_metrics,
         clusters=clusters,
@@ -114,13 +119,20 @@ async def research_keyword(req: KeywordResearchRequest):
     return response
 
 @router.get("/suggest")
-async def get_raw_suggestions(q: str = Query(..., min_length=1, max_length=100)):
+async def get_raw_suggestions(
+    q: str = Query(..., min_length=1, max_length=100),
+    hl: str = Query("en", max_length=10),
+    gl: str = Query("US", max_length=10)
+):
     clean_q = sanitize_keyword(q)
     provider = get_youtube_provider()
-    suggestions = await provider.get_autocomplete_suggestions(clean_q)
+    suggestions = await provider.get_autocomplete_suggestions(clean_q, hl=hl, gl=gl)
     return {
         "query": clean_q,
+        "country": gl,
+        "language": hl,
         "suggestions": suggestions,
         "count": len(suggestions),
+        "source": "YouTube Autocomplete API",
         "provenance": DataProvenance.PUBLIC.value
     }

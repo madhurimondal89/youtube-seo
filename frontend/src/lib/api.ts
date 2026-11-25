@@ -11,7 +11,17 @@ import {
   GrowthStrategyResponse,
 } from "./types";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
+// In browser, always use relative path "/api" so requests are proxied by Next.js to backend.
+// In SSR (server-side), use INTERNAL_BACKEND_URL or default internal port.
+const getApiBase = () => {
+  if (typeof window !== "undefined") {
+    return process.env.NEXT_PUBLIC_API_URL || "/api";
+  }
+  const backendUrl = process.env.INTERNAL_BACKEND_URL || "http://127.0.0.1:8001";
+  return `${backendUrl}/api`;
+};
+
+const API_BASE = getApiBase();
 
 export async function fetchSystemStatus(): Promise<SystemStatus | null> {
   try {
@@ -78,13 +88,17 @@ export async function researchKeyword(
   includeModifiers: boolean = true,
   maxKeywords: number = 40,
   includeQuestions: boolean = true,
-  includeComparisons: boolean = true
+  includeComparisons: boolean = true,
+  country: string = "US",
+  language: string = "en"
 ): Promise<KeywordResearchResponse> {
   const res = await fetch(`${API_BASE}/research/keyword`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       seed,
+      country,
+      language,
       include_alphabet_expansion: includeAlphabet,
       include_modifiers: includeModifiers,
       include_questions: includeQuestions,
