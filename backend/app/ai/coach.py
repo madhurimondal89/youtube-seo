@@ -32,20 +32,32 @@ async def generate_growth_strategy(
     niche: str,
     channel_name: Optional[str] = None,
     language: str = "English",
-    ai_provider=None
+    ai_provider=None,
+    saved_keywords: Optional[List[str]] = None,
+    top_performing_topics: Optional[List[str]] = None,
+    channel_metrics_summary: Optional[str] = None,
 ) -> GrowthStrategyResponse:
     # 1. Check if AI Provider is active
     if ai_provider and await ai_provider.is_available():
+        context_block = ""
+        if saved_keywords:
+            context_block += f"\n- User's Validated High-Opportunity Keywords: {', '.join(saved_keywords[:8])}"
+        if top_performing_topics:
+            context_block += f"\n- Channel's Proven Top-Performing Topics: {', '.join(top_performing_topics[:5])}"
+        if channel_metrics_summary:
+            context_block += f"\n- Channel Performance Context: {channel_metrics_summary}"
+
         system_prompt = (
             "You are a world-class YouTube Growth Coach & Algorithm Strategist. "
             "Generate a hyper-practical, high-retention 30-day YouTube growth plan in JSON format. "
+            "Crucially, incorporate the user's validated keywords and channel performance context into the specific video plans. "
             "Never invent fake analytics. Return pure JSON matching the requested schema."
         )
         prompt = f"""
 Create a 30-day YouTube growth roadmap for:
 - Niche: {niche}
 - Channel Name: {channel_name or 'Creator Channel'}
-- Language/Region: {language}
+- Language/Region: {language}{context_block}
 
 Return a valid JSON object with:
 {{
@@ -282,6 +294,15 @@ Return a valid JSON object with:
         CoachWeekPlan(week_number=3, theme="Trending Angles & Audience Exploration", milestone_objective="Break into YouTube Suggested & Browse algorithms", videos=[w3_v1, w3_v2]),
         CoachWeekPlan(week_number=4, theme="Authority Anchor & Community Retention", milestone_objective="Convert casual search viewers into loyal subscribers", videos=[w4_v1, w4_v2]),
     ]
+
+    # Context-awareness: Inject user's validated research keywords if provided
+    if saved_keywords and len(saved_keywords) > 0:
+        kw_idx = 0
+        for w in weeks:
+            for v in w.videos:
+                if kw_idx < len(saved_keywords):
+                    v.target_keyword = saved_keywords[kw_idx]
+                    kw_idx += 1
     
     checklist = [
         "First 10 Seconds: Never start with an animated channel intro. Deliver the hook immediately.",

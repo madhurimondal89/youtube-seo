@@ -1,3 +1,10 @@
+# SQLite database
+*.db
+*.sqlite
+*.sqlite3
+backend/data/*.db
+data/*.db
+
 # Python
 __pycache__/
 *.py[cod]

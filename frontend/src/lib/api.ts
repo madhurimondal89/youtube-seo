@@ -280,7 +280,10 @@ export async function analyzeThumbnailUrl(url: string): Promise<ThumbnailAnalysi
 export async function fetchGrowthStrategy(
   niche: string,
   channelName?: string,
-  language: string = "English"
+  language: string = "English",
+  savedKeywords?: string[],
+  topPerformingTopics?: string[],
+  channelMetricsSummary?: string
 ): Promise<GrowthStrategyResponse> {
   const res = await fetch(`${API_BASE}/ai/growth-coach`, {
     method: "POST",
@@ -289,6 +292,9 @@ export async function fetchGrowthStrategy(
       niche,
       channel_name: channelName,
       language,
+      saved_keywords: savedKeywords,
+      top_performing_topics: topPerformingTopics,
+      channel_metrics_summary: channelMetricsSummary,
     }),
   });
   if (!res.ok) {
@@ -297,4 +303,65 @@ export async function fetchGrowthStrategy(
   }
   return await res.json();
 }
+
+// --- Workspace Persistence API ---
+export async function saveWorkspaceKeywordProject(seed: string, data: any, title?: string) {
+  const res = await fetch(`${API_BASE}/workspace/keywords`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ seed, data, title }),
+  });
+  if (!res.ok) throw new Error("Failed to save keyword project");
+  return await res.json();
+}
+
+export async function fetchWorkspaceKeywordProjects() {
+  const res = await fetch(`${API_BASE}/workspace/keywords`, { cache: "no-store" });
+  if (!res.ok) return [];
+  return await res.json();
+}
+
+export async function saveWorkspaceCompetitor(channelId: string, channelName: string, medianViews: number = 0, subscriberCount: string = "N/A", notes: string = "") {
+  const res = await fetch(`${API_BASE}/workspace/competitors`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      channel_id: channelId,
+      channel_name: channelName,
+      median_views: medianViews,
+      subscriber_count: subscriberCount,
+      notes,
+    }),
+  });
+  if (!res.ok) throw new Error("Failed to save competitor to watchlist");
+  return await res.json();
+}
+
+export async function fetchWorkspaceCompetitors() {
+  const res = await fetch(`${API_BASE}/workspace/competitors`, { cache: "no-store" });
+  if (!res.ok) return [];
+  return await res.json();
+}
+
+export async function saveWorkspaceAudit(videoTitle: string, overallScore: number, auditData: any, videoUrl?: string) {
+  const res = await fetch(`${API_BASE}/workspace/audits`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      video_title: videoTitle,
+      overall_score: overallScore,
+      audit_data: auditData,
+      video_url: videoUrl,
+    }),
+  });
+  if (!res.ok) throw new Error("Failed to save audit report");
+  return await res.json();
+}
+
+export async function fetchWorkspaceAudits() {
+  const res = await fetch(`${API_BASE}/workspace/audits`, { cache: "no-store" });
+  if (!res.ok) return [];
+  return await res.json();
+}
+
 

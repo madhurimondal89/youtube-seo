@@ -31,6 +31,9 @@ export default function GrowthCoachPage() {
   const [niche, setNiche] = useState("Bengali Mystery and History");
   const [channelName, setChannelName] = useState("");
   const [language, setLanguage] = useState("Bengali");
+  const [customKeywords, setCustomKeywords] = useState("");
+  const [channelContext, setChannelContext] = useState("");
+  const [showAdvancedContext, setShowAdvancedContext] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [strategy, setStrategy] = useState<GrowthStrategyResponse | null>(null);
@@ -43,8 +46,20 @@ export default function GrowthCoachPage() {
     setError(null);
     setLoading(true);
 
+    const kwList = customKeywords
+      .split(",")
+      .map((k) => k.trim())
+      .filter(Boolean);
+
     try {
-      const res = await fetchGrowthStrategy(niche.trim(), channelName.trim() || undefined, language);
+      const res = await fetchGrowthStrategy(
+        niche.trim(),
+        channelName.trim() || undefined,
+        language,
+        kwList.length > 0 ? kwList : undefined,
+        undefined,
+        channelContext.trim() || undefined
+      );
       setStrategy(res);
     } catch (err: any) {
       setError(err.message || "Failed to generate growth strategy");
@@ -151,6 +166,42 @@ export default function GrowthCoachPage() {
               <option value="Portuguese">Portuguese</option>
             </select>
           </div>
+
+          <div className="md:col-span-4">
+            <button
+              type="button"
+              onClick={() => setShowAdvancedContext(!showAdvancedContext)}
+              className="text-xs text-[var(--color-accent)] hover:underline inline-flex items-center gap-1.5"
+            >
+              <span>{showAdvancedContext ? "– Hide Context & Performance Signals" : "+ Add Context & Validated Keywords (Optional)"}</span>
+            </button>
+          </div>
+
+          {showAdvancedContext && (
+            <>
+              <div className="md:col-span-2 space-y-1">
+                <label className="text-xs text-[var(--color-muted)]">Validated Research Keywords (comma-separated)</label>
+                <input
+                  type="text"
+                  value={customKeywords}
+                  onChange={(e) => setCustomKeywords(e.target.value)}
+                  placeholder="e.g. bangla history documentary, unsolved cases, british archives"
+                  className="w-full bg-[var(--color-paper-3)] border border-[var(--color-rule)] rounded-md px-3 py-2 text-xs text-[var(--color-ink)] placeholder-[var(--color-muted)] focus:outline-none focus:border-[var(--color-rule-2)]"
+                />
+              </div>
+
+              <div className="md:col-span-2 space-y-1">
+                <label className="text-xs text-[var(--color-muted)]">Channel Context &amp; High-Retention Topics</label>
+                <input
+                  type="text"
+                  value={channelContext}
+                  onChange={(e) => setChannelContext(e.target.value)}
+                  placeholder="e.g. Median 50K views, top outliers in investigative documentaries"
+                  className="w-full bg-[var(--color-paper-3)] border border-[var(--color-rule)] rounded-md px-3 py-2 text-xs text-[var(--color-ink)] placeholder-[var(--color-muted)] focus:outline-none focus:border-[var(--color-rule-2)]"
+                />
+              </div>
+            </>
+          )}
 
           <div className="md:col-span-4 pt-1">
             <button

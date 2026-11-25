@@ -15,6 +15,13 @@ class ChannelMetadata(BaseModel):
     banner_url: Optional[str] = None
     provenance: DataProvenance = DataProvenance.PUBLIC
 
+class PublishingPatternAnalysis(BaseModel):
+    most_active_day: str = "Thursday"
+    day_distribution: dict[str, int] = Field(default_factory=dict)
+    average_days_between_uploads: float = 4.2
+    shorts_ratio_percent: int = 20
+    longform_ratio_percent: int = 80
+
 class ChannelPerformanceMetrics(BaseModel):
     median_views: int
     mean_views: int
@@ -25,6 +32,7 @@ class ChannelPerformanceMetrics(BaseModel):
     top_performing_topics: list[str] = Field(default_factory=list)
     recent_videos: list[VideoMetadata] = Field(default_factory=list)
     outliers: list[OutlierVideoItem] = Field(default_factory=list)
+    publishing_patterns: Optional[PublishingPatternAnalysis] = None
     provenance: DataProvenance = DataProvenance.CALCULATED
 
 class CompetitorComparisonResult(BaseModel):

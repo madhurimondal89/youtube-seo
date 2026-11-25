@@ -26,31 +26,12 @@ from app.models.ai_dtos import (
     ContentCalendarResponse,
 )
 
+from app.ai.registry import provider_registry
+
 router = APIRouter(prefix="/ai", tags=["AI Studio"])
 
 def get_current_ai_provider():
-    if not settings.ai_enabled:
-        return DisabledAIProvider()
-    
-    provider_type = settings.ai_provider.lower().strip()
-    
-    if provider_type == "ollama":
-        return LocalOllamaProvider(base_url=settings.ollama_base_url, model=settings.ollama_model)
-    elif provider_type == "custom":
-        return CustomOpenAICompatibleProvider(
-            base_url=settings.custom_ai_base_url,
-            model=settings.custom_ai_model,
-            api_key=settings.custom_ai_api_key,
-        )
-    elif provider_type == "gemini":
-        return GoogleGeminiProvider(
-            api_key=settings.gemini_api_key or "",
-            model=settings.gemini_model,
-        )
-    elif provider_type == "openai" and settings.openai_api_key:
-        return OptionalOpenAIProvider(api_key=settings.openai_api_key, model=settings.openai_model)
-        
-    return DisabledAIProvider()
+    return provider_registry.get_provider()
 
 class TitleRequest(BaseModel):
     topic: str
@@ -145,6 +126,9 @@ class CoachRequest(BaseModel):
     niche: str
     channel_name: Optional[str] = None
     language: str = "English"
+    saved_keywords: Optional[list[str]] = None
+    top_performing_topics: Optional[list[str]] = None
+    channel_metrics_summary: Optional[str] = None
 
 @router.post("/growth-coach", response_model=GrowthStrategyResponse)
 async def run_growth_coach(req: CoachRequest):
@@ -153,6 +137,9 @@ async def run_growth_coach(req: CoachRequest):
         niche=req.niche,
         channel_name=req.channel_name,
         language=req.language,
-        ai_provider=provider
+        ai_provider=provider,
+        saved_keywords=req.saved_keywords,
+        top_performing_topics=req.top_performing_topics,
+        channel_metrics_summary=req.channel_metrics_summary,
     )
 

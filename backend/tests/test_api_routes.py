@@ -1,4 +1,7 @@
 import pytest
+import io
+import base64
+from PIL import Image
 from starlette.testclient import TestClient
 from app.main import app
 
@@ -9,19 +12,21 @@ def test_health_endpoint():
     assert resp.status_code == 200
     data = resp.json()
     assert data["status"] == "ok"
-    assert data["service"] == "TubePilot AI"
+    assert data["service"] == "YouTube SEO"
 
 def test_system_status():
     resp = client.get("/api/system/status")
     assert resp.status_code == 200
     data = resp.json()
-    assert data["app_name"] == "TubePilot AI"
+    assert data["app_name"] == "YouTube SEO"
 
 def test_keyword_research_api():
     payload = {
         "seed": "youtube automation",
         "include_alphabet_expansion": True,
         "include_modifiers": True,
+        "include_questions": True,
+        "include_comparisons": True,
         "max_keywords": 15
     }
     resp = client.post("/api/research/keyword", json=payload)
@@ -33,12 +38,17 @@ def test_keyword_research_api():
     assert "estimated_competition" in data["keywords"][0]
     assert "relative_demand" in data["keywords"][0]
 
+def test_keyword_research_empty_seed_validation():
+    resp = client.post("/api/research/keyword", json={"seed": ""})
+    assert resp.status_code == 422 or resp.status_code == 400
+
 def test_video_audit_api():
     payload = {
         "title": "Mastering YouTube Keyword Research (Step by Step Guide)",
         "description": "Comprehensive tutorial on youtube keyword research with chapters and tips.\n00:00 - Intro\n03:00 - Setup",
         "tags": ["youtube keyword research", "youtube seo"],
-        "target_keyword": "youtube keyword research"
+        "target_keyword": "youtube keyword research",
+        "has_captions": True
     }
     resp = client.post("/api/audit/video", json=payload)
     assert resp.status_code == 200
@@ -58,3 +68,45 @@ def test_ai_studio_title_generation():
     assert len(titles) == 5
     assert "seo_relevance_heuristic" in titles[0]
     assert "curiosity_heuristic" in titles[0]
+
+def test_thumbnail_analyzer_api():
+    img = Image.new("RGB", (1280, 720), (35, 45, 65))
+    buf = io.BytesIO()
+    img.save(buf, "JPEG")
+    b64 = base64.b64encode(buf.getvalue()).decode()
+
+    resp = client.post("/api/ai/thumbnail/analyze-upload", json={"image_base64": b64, "filename": "test.jpg"})
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["aspect_ratio_label"] == "16:9"
+    assert 0 <= data["overall_score"] <= 100
+    assert "contrast_ratio" in data
+
+def test_thumbnail_analyzer_invalid_base64():
+    resp = client.post("/api/ai/thumbnail/analyze-upload", json={"image_base64": "not-valid-base64-image"})
+    assert resp.status_code == 400
+
+def test_growth_coach_api():
+    payload = {
+        "niche": "Bengali Mystery and History",
+        "channel_name": "Rahasya Golpo",
+        "language": "Bengali"
+    }
+    resp = client.post("/api/ai/growth-coach", json=payload)
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["niche"] == "Bengali Mystery and History"
+    assert len(data["weeks"]) == 4
+
+def test_outlier_detection_api():
+    resp = client.get("/api/competitor/outliers?channel=UC_x5XG1OV2P6uZZ5FSM9Ttw")
+    # Will return 200 with list of outliers or fallback
+    assert resp.status_code in [200, 400]
+
+def test_system_settings_api():
+    resp = client.get("/api/system/settings")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert "ai_enabled" in data
+    assert "ai_provider" in data
+    assert "custom_ai_base_url" in data

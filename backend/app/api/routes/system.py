@@ -156,38 +156,14 @@ async def update_settings(req: SettingsUpdateRequest):
 
 @router.post("/test-ai")
 async def test_ai_connection():
-    from app.api.routes.ai import get_current_ai_provider
+    from app.ai.registry import provider_registry
     if not settings.ai_enabled:
         return {
             "success": False,
             "provider": "Disabled",
             "message": "AI is currently disabled. Toggle 'Enable AI Layer' to test."
         }
-
-    prov = get_current_ai_provider()
-    try:
-        reply = await prov.generate_text(
-            prompt="Hello! In 5 words or less, say hello to YouTube creator.",
-            system_prompt="You are YouTube SEO. Respond concisely.",
-            max_tokens=30
-        )
-        if "Error" in reply or "connection error" in reply.lower():
-            return {
-                "success": False,
-                "provider": prov.get_provider_name(),
-                "message": reply
-            }
-        return {
-            "success": True,
-            "provider": prov.get_provider_name(),
-            "response": reply
-        }
-    except Exception as e:
-        return {
-            "success": False,
-            "provider": prov.get_provider_name(),
-            "message": str(e)
-        }
+    return await provider_registry.test_connection(provider_type=settings.ai_provider)
 
 @router.post("/cache/clear")
 async def clear_cache():
