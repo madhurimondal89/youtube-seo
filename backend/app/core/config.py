@@ -1,6 +1,6 @@
 from pydantic_settings import BaseSettings
-from pydantic import Field
-from typing import Optional
+from pydantic import Field, model_validator
+from typing import Optional, Any
 
 class Settings(BaseSettings):
     app_name: str = "YouTube SEO"
@@ -62,6 +62,22 @@ class Settings(BaseSettings):
     cache_enabled: bool = True
     cache_ttl_seconds: int = 900
     max_concurrent_jobs: int = 3
+
+    @model_validator(mode="before")
+    @classmethod
+    def clean_empty_strings(cls, values: Any) -> Any:
+        """
+        Gracefully handle empty string environment variables (e.g. AI_ENABLED='', DEBUG='').
+        Omitting empty strings allows Pydantic to fall back to field default values cleanly.
+        """
+        if isinstance(values, dict):
+            cleaned = {}
+            for k, v in values.items():
+                if isinstance(v, str) and v.strip() == "":
+                    continue
+                cleaned[k] = v
+            return cleaned
+        return values
 
     model_config = {
         "env_file": ".env",

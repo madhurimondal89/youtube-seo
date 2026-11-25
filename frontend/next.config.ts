@@ -8,6 +8,10 @@ const nextConfig: NextConfig = {
     const backendUrl = process.env.INTERNAL_BACKEND_URL || "http://127.0.0.1:8000";
     return [
       {
+        source: "/health",
+        destination: `${backendUrl}/health`,
+      },
+      {
         source: "/api/:path*",
         destination: `${backendUrl}/api/:path*`,
       },
