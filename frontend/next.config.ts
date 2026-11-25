@@ -3,9 +3,9 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   output: "standalone",
   async rewrites() {
-    // In Coolify/Docker internal network, INTERNAL_BACKEND_URL is http://backend:8000
-    // In local development, fallback to http://127.0.0.1:8000
-    const backendUrl = process.env.INTERNAL_BACKEND_URL || "http://127.0.0.1:8000";
+    // In Coolify/Docker internal network, INTERNAL_BACKEND_URL is http://backend:8000 or http://127.0.0.1:8001
+    // In local development or unified container, fallback to http://127.0.0.1:8001
+    const backendUrl = process.env.INTERNAL_BACKEND_URL || "http://127.0.0.1:8001";
     return [
       {
         source: "/health",

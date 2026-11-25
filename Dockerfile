@@ -64,9 +64,9 @@ ENV DATABASE_URL="sqlite:///./backend/data/youtube_seo.db"
 ENV APP_ENV="production"
 ENV SECRET_KEY=""
 
-EXPOSE 3000
+EXPOSE 3000 8000
 
 HEALTHCHECK --interval=20s --timeout=5s --start-period=15s --retries=3 \
-  CMD curl -f http://127.0.0.1:3000/health || curl -f http://127.0.0.1:8000/health || exit 1
+  CMD curl -f http://127.0.0.1:8001/health || curl -f http://127.0.0.1:3000/health || curl -f http://127.0.0.1:8000/health || exit 1
 
 ENTRYPOINT ["./entrypoint.sh"]

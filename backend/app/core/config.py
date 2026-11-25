@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     
     # Bindings
     backend_host: str = "0.0.0.0"
-    backend_port: int = 8000
+    backend_port: int = 8001
     frontend_port: int = 3000
     
     # AI (Optional)
