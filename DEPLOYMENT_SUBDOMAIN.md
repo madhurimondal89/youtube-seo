@@ -59,54 +59,43 @@ In your DNS manager (Hostinger, Cloudflare, Namecheap, etc.) for `freeyoutubetoo
 
 ---
 
-## 3. Recommended Deployment: Coolify + Traefik
+## 3. Deployment in Coolify (Two Supported Options)
 
-### Step 1: Generate Cryptographically Secure Secret
-Before deploying, generate a strong 32-byte hexadecimal secret key on your local terminal or VPS:
-```bash
-openssl rand -hex 32
-```
-Copy this output for the `SECRET_KEY` environment variable.
+### Option 1: Standard Coolify Application (Default Dockerfile — Recommended)
+This is the default and simplest deployment method in Coolify when creating a resource from a GitHub repository:
 
-### Step 2: Create Application in Coolify
-1. In your Coolify dashboard, navigate to **Projects** -> **Add Resource** -> **Docker Compose**.
-2. Connect your GitHub repository:
-   - **Repository:** `https://github.com/madhurimondal89/youtube-seo.git`
-   - **Branch:** `main`
-3. In the Compose configuration:
-   - **Compose File Path:** `docker-compose.coolify.yml`
-   - **Domains for Frontend:** `https://seo.freeyoutubetools.com`
+1. In your Coolify dashboard, click **Add Resource** -> **GitHub Repository** -> Select `madhurimondal89/youtube-seo` (branch `main`).
+2. Coolify uses **Build Pack: Dockerfile** by default, targeting the root `/Dockerfile`.
+3. In General settings:
+   - **Domains:** `https://seo.freeyoutubetools.com`
+   - **Exposed Port:** `3000`
+4. Set Environment Variables in Coolify:
+   ```ini
+   APP_ENV=production
+   SECRET_KEY=paste_your_openssl_generated_hex_key_here
+   AI_ENABLED=false
+   AI_PROVIDER=ollama
+   OLLAMA_BASE_URL=http://host.docker.internal:11434
+   ```
+5. Click **Deploy**. Both Next.js (port 3000) and FastAPI (port 8000) run together seamlessly in one optimized container!
 
-### Step 3: Configure Environment Variables in Coolify
-Set the following environment variables in Coolify's Environment settings:
+---
 
-```ini
-# Required Security Keys
-APP_ENV=production
-SECRET_KEY=paste_your_openssl_generated_hex_key_here
+### Option 2: Coolify Docker Compose (`docker-compose.coolify.yml`)
+If you prefer multi-container architecture with separate backend and frontend containers:
 
-# Internal & External Network
-NEXT_PUBLIC_API_URL=/api
-INTERNAL_BACKEND_URL=http://backend:8000
-DATABASE_URL=sqlite:///./data/youtube_seo.db
-
-# YouTube Data (Default: public; key is 100% optional)
-YOUTUBE_PROVIDER=public
-YOUTUBE_API_KEY=
-
-# Multi-AI Configuration (Optional — Set AI_ENABLED=false for deterministic mode)
-AI_ENABLED=false
-AI_PROVIDER=ollama
-OLLAMA_BASE_URL=http://host.docker.internal:11434
-OLLAMA_MODEL=qwen2.5:3b
-
-# Optional Cloud AI Keys
-GEMINI_API_KEY=
-GROQ_API_KEY=
-DEEPSEEK_API_KEY=
-OPENROUTER_API_KEY=
-OPENAI_API_KEY=
-```
+1. In Coolify, under your Application settings:
+   - Change **Build Pack** from `Dockerfile` to **Docker Compose**.
+   - Set **Docker Compose Location**: `/docker-compose.coolify.yml`
+2. In Coolify Environment settings, configure:
+   ```ini
+   APP_ENV=production
+   SECRET_KEY=paste_your_openssl_generated_hex_key_here
+   INTERNAL_BACKEND_URL=http://backend:8000
+   NEXT_PUBLIC_API_URL=/api
+   ```
+3. Set domain for frontend: `https://seo.freeyoutubetools.com`.
+4. Click **Deploy**. Traefik routes domain traffic to `frontend:3000` over the external `coolify` network.
 
 ### Step 4: Deploy & Verify
 1. Click **Deploy**.

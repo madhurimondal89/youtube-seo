@@ -1,0 +1,14 @@
+.git
+.github
+.vscode
+.venv
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+frontend/.next
+frontend/node_modules
+backend/data/*.db
+docs
+.DS_Store
+Thumbs.db
