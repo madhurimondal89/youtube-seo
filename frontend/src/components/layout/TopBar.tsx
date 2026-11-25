@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Search, Cpu, Database, Check } from "lucide-react";
+import { Search, Cpu, Database, Check, ExternalLink } from "lucide-react";
 import { fetchSystemStatus } from "@/lib/api";
 import { SystemStatus } from "@/lib/types";
 
@@ -76,6 +76,18 @@ export default function TopBar() {
           <Check className="w-3.5 h-3.5" />
           <span className="font-medium">Active</span>
         </div>
+
+        {/* Link to Main YouTube Tools Platform */}
+        <a
+          href="https://freeyoutubetools.com/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-red-600/10 hover:bg-red-600/20 border border-red-500/30 text-xs font-medium text-red-400 hover:text-red-300 transition-colors duration-150 shrink-0"
+          title="Visit Main Platform: Free YouTube Tools (freeyoutubetools.com)"
+        >
+          <ExternalLink className="w-3.5 h-3.5" />
+          <span>YouTube Tool</span>
+        </a>
       </div>
     </header>
   );
