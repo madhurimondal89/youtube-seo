@@ -5,11 +5,14 @@ from app.core.config import settings
 
 class LocalOllamaProvider(AIProvider):
     """
-    Adapter for local Ollama server running quantized, CPU-friendly models
-    such as Qwen 2.5 0.5B / 4B or Gemma 3 4B on Hostinger KVM 4.
+    Adapter for local, remote, or containerized Ollama server running quantized models
+    such as Qwen 2.5 0.5B / 3B or Gemma 2 / Llama 3.
     """
     def __init__(self, base_url: Optional[str] = None, model: Optional[str] = None):
-        self.base_url = (base_url or settings.ollama_base_url).rstrip("/")
+        raw_url = (base_url or settings.ollama_base_url).rstrip("/")
+        if not raw_url.startswith("http://") and not raw_url.startswith("https://"):
+            raw_url = f"http://{raw_url}"
+        self.base_url = raw_url
         self.model = model or settings.ollama_model
         self.timeout = settings.ollama_timeout
 
@@ -40,9 +43,14 @@ class LocalOllamaProvider(AIProvider):
                 if resp.status_code == 200:
                     data = resp.json()
                     return data.get("response", "").strip()
-                return f"Ollama Error: Status {resp.status_code}"
+                return f"Ollama Error (HTTP {resp.status_code}): Could not generate text with model '{self.model}'."
+        except httpx.ConnectError:
+            docker_hint = " (Hint: from inside Docker containers, use 'http://host.docker.internal:11434' instead of localhost/127.0.0.1)" if ("127.0.0.1" in self.base_url or "localhost" in self.base_url) else ""
+            return f"Ollama Connection Error: Unable to connect to Ollama at {self.base_url}{docker_hint}."
+        except httpx.TimeoutException:
+            return f"Ollama Timeout: Model inference at {self.base_url} timed out after {self.timeout}s."
         except Exception as e:
-            return f"Ollama connection error: {str(e)}"
+            return f"Ollama Connection Error: {str(e)}"
 
     def get_provider_name(self) -> str:
         return f"Local Ollama ({self.model})"

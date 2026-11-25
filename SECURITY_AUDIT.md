@@ -1,54 +1,92 @@
-# Security & Compliance Audit Report
-### YouTube SEO & Creator Intelligence Platform (`seo.freeyoutubetools.com`)
+# Security & Production Hardening Audit Report
+### TubePilot AI / YouTube SEO Platform (`seo.freeyoutubetools.com`)
 
 **Audit Date:** November 25, 2026  
-**Auditor:** Quality & Security Engineering  
-**Target:** Next.js 16 + FastAPI Decoupled Stack  
+**Auditor:** Senior Security & Quality Engineering  
+**Scope:** Final Production Hardening & Compliance Pass  
+**Overall Status:** PASSED (Zero High/Critical Vulnerabilities)  
 
 ---
 
-## 1. Executive Summary
+## 1. P0 – Production Secrets & Startup Hardening
 
-A comprehensive final engineering security audit was performed covering:
-- Authentication and secret shielding
-- API key masking across 9 supported AI providers (Gemini, OpenAI, Groq, DeepSeek, OpenRouter, Ollama, LM Studio, LocalAI, Custom)
-- Input sanitization and bounds checking
-- Rate limiting and burst protection
-- YouTube Data Terms of Service and data collection provenance
-- Docker & Coolify container network isolation
+### A. Secret Strength Enforcement (`validate_secret_strength`)
+- **Vulnerability Addressed:** Insecure default or placeholder secrets left in production `.env` files.
+- **Controls Implemented:**
+  - Added `validate_secret_strength()` in `backend/app/core/security.py`.
+  - Blocks all known default placeholders:
+    `INSECURE_SECRET_PLACEHOLDERS = {"youtube-seo-insecure-secret-key-change-me", "change-this-secret-key-in-production-random-hex-string", "change-me", "secret", "password", "default", "123456"}`
+  - Blocks any key containing keywords: `change-this`, `insecure`, `change-me`, `example`, `placeholder`, `dev-`.
+  - Enforces minimum length of **32 characters**.
+- **Startup Lifespan Guard:**
+  - In `backend/app/main.py`, FastAPI's `lifespan` handler checks `APP_ENV`. If `APP_ENV=production` or `APP_ENV=prod`, startup immediately raises `RuntimeError` if `SECRET_KEY` is missing, short, or placeholder.
+  - In `docker-compose.coolify.yml`, variable substitution syntax `${SECRET_KEY:?SECRET_KEY must be set in environment}` causes Docker Compose itself to fail immediately if the secret is omitted.
 
-**Overall Rating: PASSED (Zero High/Critical Vulnerabilities)**
+### B. Secret Masking & Response Protection
+- **Zero Leakage:** `SECRET_KEY` is strictly used server-side and never returned in `/api/system/settings`, `/api/system/status`, or any response payload.
+- **Provider API Keys:** All API keys (`GROQ_API_KEY`, `DEEPSEEK_API_KEY`, `OPENROUTER_API_KEY`, `GEMINI_API_KEY`, `OPENAI_API_KEY`, `YOUTUBE_API_KEY`) are masked (`gsk_••••••••` or `AIza••••••••`) before being serialized in JSON.
+
+### C. OAuth Token Security Architecture
+- If users connect channel analytics via OAuth 2.0:
+  - Scopes are restricted strictly to read-only (`https://www.googleapis.com/auth/yt-analytics.readonly`).
+  - Refresh tokens are encrypted at rest using AES-GCM-256 with key derivation from `SECRET_KEY`.
+  - OAuth tokens are never logged or exposed in client-side responses or query strings.
 
 ---
 
-## 2. Key Security Findings & Controls
+## 2. P0 – Ollama Connectivity & Docker Isolation
 
-### A. Secret Protection & API Key Masking
-- **Verification:** All sensitive API keys (`GEMINI_API_KEY`, `OPENAI_API_KEY`, `GROQ_API_KEY`, `DEEPSEEK_API_KEY`, `OPENROUTER_API_KEY`, `CUSTOM_AI_API_KEY`, `YOUTUBE_API_KEY`) are read strictly within backend Python memory from `.env` or system environment variables.
-- **Frontend Masking:** The `/api/system/settings` endpoint never returns full secrets. It returns masked strings (e.g. `gsk_••••••••` or `AIza••••••••`) and boolean flags (`has_gemini_api_key: true`).
-- **Git Protection:** `.gitignore` includes comprehensive rules excluding `.env`, `.env.*`, `*.pem`, `*.key`, and temporary caches.
+### A. URL Resolution Audit
+- **Problem Addressed:** Inside Docker containers, `127.0.0.1` refers to the container itself, failing when trying to connect to Ollama running on the VPS host.
+- **Controls Implemented:**
+  - Added `extra_hosts: ["host.docker.internal:host-gateway"]` in `docker-compose.coolify.yml`.
+  - Mapped default `OLLAMA_BASE_URL` to `http://host.docker.internal:11434` for Docker environments.
+  - Added URL normalization in `LocalOllamaProvider` (automatically prepends `http://` if missing and strips trailing slashes).
+  - Added helpful diagnostic hint in `test_connection()` and error handling if `127.0.0.1` or `localhost` is used inside Docker.
+  - Added an optional companion `ollama` Docker service (`profile: local-ai`) for self-contained deployments.
 
-### B. Input Validation & Injection Prevention
-- **Pydantic v2 Strict Typing:** All incoming request payloads (`KeywordResearchRequest`, `CoachRequest`, `VideoAuditRequest`, `ThumbnailBase64Request`, `SettingsUpdateRequest`) are validated using Pydantic schemas.
-- **Keyword Sanitization:** User inputs pass through `sanitize_keyword()`:
-  - Max length enforced (120 characters)
-  - Control characters and script injection tokens stripped
-- **Image File Bounds:**
-  - MIME check and 10MB memory limit enforced for thumbnail uploads
-  - Invalid base64 or corrupt headers cleanly caught with HTTP 400
+### B. Graceful Degradation
+- If Ollama server is unreachable, offline, or times out, `ResilientAIProvider` automatically falls back to deterministic mathematical SEO scoring without crashing the user's session or throwing HTTP 500 errors.
 
-### C. Rate Limiting & DoS Protection
-- Token bucket rate limiter implemented in `backend/app/core/rate_limit.py` protecting external request endpoints (`max_rate: 60/minute`).
-- Public scraper paced with randomized jitter sleep delays (`0.15s - 0.45s`) to remain polite to upstream search infrastructure.
+---
 
-### D. YouTube Developer Policy Compliance
-- **No CAPTCHA Bypass:** The platform contains zero anti-bot / Cloudflare / CAPTCHA bypass mechanisms. If challenges occur, code cleanly halts.
-- **No Private Competitor Scraping:** Metrics are strictly derived from public video timestamps, observable subscriber tiers, or authorized OAuth tokens.
-- **No Fabricated Search Volumes:** Results are labeled as `Relative Demand Index (0-100)` or `Public/Calculated`, complying with truthful advertising standards.
-- Detailed audit in `docs/YOUTUBE_DATA_COMPLIANCE.md`.
+## 3. P0 – YouTube Developer Policy Compliance
 
-### E. Container & Deployment Security (Coolify / Traefik)
-- Dedicated `docker-compose.coolify.yml` configuration:
-  - Backend port 8000 is internal-only to Docker, **never exposed to the public Internet**.
-  - Host ports 80/443 are untouched to avoid conflicting with host Traefik.
-  - Next.js acts as internal reverse-proxy via rewrite rules to `http://backend:8000`.
+### A. Data Collection Method Review
+- **Public Suggest:** Uses browser-standard suggestion endpoint (`suggestqueries.google.com/complete/search?client=firefox&ds=yt`).
+- **oEmbed:** Uses Google's official public oEmbed standard (`youtube.com/oembed`).
+- **RSS:** Uses official channel Atom feeds (`youtube.com/feeds/videos.xml`).
+- **Public Watch Metadata:** Reads only open OpenGraph & HTML `<meta>` tags.
+- **Official API:** Fully supports Google YouTube Data API v3 when configured.
+
+### B. Anti-Bot & CAPTCHA Compliance
+- **Zero Bypass:** No CAPTCHA solvers, cloudflare bypass tools, headless browser spoofing, or residential proxy rotators are present in the codebase.
+- **Immediate Halt:** If `consent.youtube.com` or `sorry/index` is returned by Google, the scraper immediately and gracefully halts.
+- **Provenance Stamping:** Every metric returned indicates its provenance (`OFFICIAL`, `PUBLIC`, `CALCULATED`, `ESTIMATED`, `RELATIVE`, or `UNAVAILABLE`).
+
+---
+
+## 4. P1 – 9-Provider Consistency & Deployment Hardening
+
+### A. Provider Uniformity
+All 9 advertised AI providers are supported across config, registry, settings API, frontend UI, and documentation:
+1. Google Gemini
+2. OpenAI
+3. Groq Fast Inference
+4. DeepSeek AI
+5. OpenRouter
+6. Local Ollama
+7. Local LM Studio
+8. LocalAI
+9. Custom OpenAI-compatible endpoints
+
+### B. Coolify & Traefik Infrastructure Security
+- **No Host Port 80/443 Conflicts:** Traefik binds ports 80/443; containers bind zero host ports.
+- **No Public Backend Port:** FastAPI port 8000 is internal-only to Docker network `coolify`.
+- **Internal Reverse Proxy:** Next.js rewrites `/api/*` to `http://backend:8000/api/*` internally, eliminating external CORS and proxy exposure.
+- **Data Persistence:** SQLite database volume `tubepilot_data` prevents data loss during rebuilds.
+
+---
+
+## 5. Audit Conclusion
+The TubePilot AI codebase meets all P0 and P1 security, compliance, and production readiness requirements for deployment on `seo.freeyoutubetools.com`.

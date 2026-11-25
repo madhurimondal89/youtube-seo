@@ -65,11 +65,15 @@ The platform features a resilient multi-provider AI adapter and official YouTube
 ### F. Local Ollama (Zero Cost, 100% Offline, CPU/GPU)
 - **Website:** [Ollama.com](https://ollama.com/)
 - **Pull Model:** `ollama pull qwen2.5:3b`
+- **Docker Connectivity Note:** When running inside Docker, never use `127.0.0.1` to refer to the host. Use `http://host.docker.internal:11434` (mapped automatically via `extra_hosts` in `docker-compose.coolify.yml`), or `http://ollama:11434` if running Ollama as a Docker service.
 - **Configuration:**
   ```ini
   AI_ENABLED=true
   AI_PROVIDER=ollama
-  OLLAMA_BASE_URL=http://127.0.0.1:11434
+  # For Docker -> Host Ollama:
+  OLLAMA_BASE_URL=http://host.docker.internal:11434
+  # For Bare-Metal:
+  # OLLAMA_BASE_URL=http://127.0.0.1:11434
   OLLAMA_MODEL=qwen2.5:3b
   ```
 

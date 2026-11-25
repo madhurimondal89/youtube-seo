@@ -4,11 +4,20 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from app.core.config import settings
 from app.core.rate_limit import rate_limiter
+from app.core.security import validate_secret_strength
 from app.api.router import api_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup: logging and warmup
+    # Enforce P0 Production Secret Protection
+    if settings.app_env.lower() in ["production", "prod"]:
+        is_valid, msg = validate_secret_strength(settings.secret_key)
+        if not is_valid:
+            raise RuntimeError(
+                f"FATAL PRODUCTION SECURITY ERROR: {msg} "
+                "In production mode (APP_ENV=production), you must set a secure SECRET_KEY of at least 32 characters. "
+                "Run `openssl rand -hex 32` to generate a cryptographically strong secret."
+            )
     yield
     # Shutdown: cleanup
 

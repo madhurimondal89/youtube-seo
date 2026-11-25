@@ -370,6 +370,9 @@ export default function SettingsPage() {
                       placeholder="http://127.0.0.1:11434"
                       className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-100 font-mono focus:border-indigo-500"
                     />
+                    <span className="text-[10px] text-slate-400 block mt-1">
+                      In Docker: use <code className="text-indigo-300">http://host.docker.internal:11434</code> (for host Ollama) or <code className="text-indigo-300">http://ollama:11434</code>. Bare-metal: <code className="text-indigo-300">http://127.0.0.1:11434</code>.
+                    </span>
                   </div>
 
                   <div>
@@ -381,6 +384,9 @@ export default function SettingsPage() {
                       placeholder="e.g. qwen2.5:3b, qwen2.5:1.5b, llama3.2"
                       className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-100 font-mono focus:border-indigo-500"
                     />
+                    <span className="text-[10px] text-slate-400 block mt-1">
+                      Run <code className="text-indigo-300">ollama pull qwen2.5:3b</code> to install this model.
+                    </span>
                   </div>
                 </div>
               )}

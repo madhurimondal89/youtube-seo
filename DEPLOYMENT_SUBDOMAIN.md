@@ -1,122 +1,172 @@
-# Production Deployment Guide: seo.freeyoutubetools.com
-## Advanced AI-Powered YouTube SEO & Creator Intelligence Platform
+# Production Subdomain Deployment: seo.freeyoutubetools.com
+### TubePilot AI — Advanced YouTube SEO & Creator Intelligence Platform
 
-This document describes how to deploy and serve this application on the **`seo.freeyoutubetools.com`** subdomain alongside your main website `freeyoutubetools.com`.
+This document is the authoritative production deployment guide for running TubePilot AI on the **`seo.freeyoutubetools.com`** subdomain. The primary website `freeyoutubetools.com` remains completely untouched on its existing infrastructure.
 
 ---
 
-### 1. Architecture Overview
+## 1. Production Architecture Overview (Coolify + Traefik)
+
+The recommended production architecture utilizes **Coolify** and **Traefik** on Ubuntu 22.04 / 24.04 LTS (e.g. Hostinger KVM 4 VPS):
 
 ```
-                      [User Requests]
-                             │
-                             ▼
-              [DNS: seo.freeyoutubetools.com]
-                             │
-                             ▼
-          [Nginx Reverse Proxy on Hostinger VPS]
-               │                         │
-               │ (Proxy to /api/*)       │ (Proxy to /*)
-               ▼                         ▼
-      [FastAPI Backend]          [Next.js 16 Frontend]
-       Port: 127.0.0.1:8000       Port: 127.0.0.1:3000
+                        [ User Web Browser ]
+                                 │
+                                 ▼
+                    [ seo.freeyoutubetools.com ]
+                                 │
+                                 ▼
+                     [ Traefik (Coolify Proxy) ]
+                      Ports: 80 (HTTP) & 443 (HTTPS)
+                      Managed Let's Encrypt SSL
+                                 │
+                         (Internal Network: 'coolify')
+                                 │
+                                 ▼
+                    [ tubepilot_frontend (Next.js 16) ]
+                    Port: 3000 (Internal Only)
+                                 │
+                         (Next.js Rewrite: /api/*)
+                                 │
+                                 ▼
+                    [ tubepilot_backend (FastAPI) ]
+                    Port: 8000 (Internal Only — Shielded from Public)
+                                 │
+                    ┌────────────┴────────────┐
+                    ▼                         ▼
+         [ SQLite Persistent DB ]    [ AI Engine (Optional) ]
+         Volume: tubepilot_data      - Host Ollama (host.docker.internal)
+                                     - Container Ollama (profile: local-ai)
+                                     - Cloud (Gemini, Groq, DeepSeek, etc.)
+                                     - Deterministic (Zero GPU/AI fallback)
 ```
 
-- **Main domain (`freeyoutubetools.com`):** Remains untouched on your primary web root / PHP / WordPress or existing server.
-- **Subdomain (`seo.freeyoutubetools.com`):** Points to this full-stack Next.js + FastAPI platform.
+### Key Security & Isolation Guarantees
+- **No Host Port Conflicts:** Containers do **NOT** bind host ports 80, 443, or 8000. Traefik routes traffic dynamically using Docker labels over the external `coolify` network.
+- **Backend Shielding:** Backend port 8000 is **never exposed to the public Internet**. All API calls pass through the internal Next.js rewrite proxy.
+- **Fail-Fast Production Secrets:** If `APP_ENV=production` and `SECRET_KEY` is missing, weak (<32 characters), or contains a default placeholder, the backend safely terminates on startup.
+- **Data Persistence:** SQLite database (`/app/data/youtube_seo.db`) is stored on a named Docker volume (`tubepilot_data`) preserving all saved keywords, watchlists, calendars, and preferences across rebuilds.
 
 ---
 
-### 2. DNS Configuration (DNS Records)
+## 2. DNS Setup (Required)
 
-In your domain registrar / Cloudflare / DNS Manager for `freeyoutubetools.com`:
+In your DNS manager (Hostinger, Cloudflare, Namecheap, etc.) for `freeyoutubetools.com`:
 
-| Type | Name / Host | Value / Target IP | TTL |
-|---|---|---|---|
-| **A** | `seo` | `YOUR_SERVER_IP` | Auto / 300 |
-
-*(If using Cloudflare, you can enable the orange proxy cloud for free DDoS protection & edge SSL).*
+| Type | Name / Host | Target / IP Address | TTL | Proxy Status |
+|---|---|---|---|---|
+| **A** | `seo` | `YOUR_HOSTINGER_VPS_IP` | 300 / Auto | DNS Only (or Proxied) |
 
 ---
 
-### 3. Production Environment Variables
+## 3. Recommended Deployment: Coolify + Traefik
 
-#### Backend: `backend/.env`
+### Step 1: Generate Cryptographically Secure Secret
+Before deploying, generate a strong 32-byte hexadecimal secret key on your local terminal or VPS:
+```bash
+openssl rand -hex 32
+```
+Copy this output for the `SECRET_KEY` environment variable.
+
+### Step 2: Create Application in Coolify
+1. In your Coolify dashboard, navigate to **Projects** -> **Add Resource** -> **Docker Compose**.
+2. Connect your GitHub repository:
+   - **Repository:** `https://github.com/madhurimondal89/youtube-seo.git`
+   - **Branch:** `main`
+3. In the Compose configuration:
+   - **Compose File Path:** `docker-compose.coolify.yml`
+   - **Domains for Frontend:** `https://seo.freeyoutubetools.com`
+
+### Step 3: Configure Environment Variables in Coolify
+Set the following environment variables in Coolify's Environment settings:
+
 ```ini
-APP_NAME="YouTube SEO"
+# Required Security Keys
 APP_ENV=production
-DEBUG=False
-BACKEND_HOST=127.0.0.1
-BACKEND_PORT=8000
-FRONTEND_PORT=3000
+SECRET_KEY=paste_your_openssl_generated_hex_key_here
 
-# YouTube Data Providers (Optional API Key - works without key via lawful public scraper/RSS)
+# Internal & External Network
+NEXT_PUBLIC_API_URL=/api
+INTERNAL_BACKEND_URL=http://backend:8000
+DATABASE_URL=sqlite:///./data/youtube_seo.db
+
+# YouTube Data (Default: public; key is 100% optional)
 YOUTUBE_PROVIDER=public
 YOUTUBE_API_KEY=
 
-# Multi-AI Engine Configuration (Optional - works deterministically with zero GPU/RAM if disabled)
-AI_ENABLED=True
-AI_PROVIDER=custom
-CUSTOM_AI_BASE_URL=http://localhost:1234/v1
-CUSTOM_AI_MODEL=qwen2.5-coder-7b-instruct
-CUSTOM_AI_API_KEY=
+# Multi-AI Configuration (Optional — Set AI_ENABLED=false for deterministic mode)
+AI_ENABLED=false
+AI_PROVIDER=ollama
+OLLAMA_BASE_URL=http://host.docker.internal:11434
+OLLAMA_MODEL=qwen2.5:3b
 
-# Cloud Fallbacks (Optional)
+# Optional Cloud AI Keys
 GEMINI_API_KEY=
+GROQ_API_KEY=
+DEEPSEEK_API_KEY=
+OPENROUTER_API_KEY=
 OPENAI_API_KEY=
 ```
 
-#### Frontend: `frontend/.env.production`
-```ini
-NEXT_PUBLIC_API_URL=https://seo.freeyoutubetools.com/api
-```
+### Step 4: Deploy & Verify
+1. Click **Deploy**.
+2. Coolify builds the Next.js standalone frontend and FastAPI backend containers.
+3. Traefik automatically provisions a Let's Encrypt SSL certificate for `seo.freeyoutubetools.com`.
+4. Verify by accessing `https://seo.freeyoutubetools.com/health` (should return HTTP 200 `{"status":"ok"}`).
 
 ---
 
-### 4. Running with PM2 / Systemd
+## 4. Ollama Configuration in Docker
 
-#### Option A: PM2 (Recommended for Bare-Metal Ubuntu)
+When running inside Docker, connecting to `http://127.0.0.1:11434` attempts to connect inside the backend container itself, where Ollama is not running. Choose one of the three verified setups:
+
+1. **Ollama running directly on the VPS Host (Recommended):**
+   - In `docker-compose.coolify.yml`, `extra_hosts` maps `host.docker.internal:host-gateway`.
+   - Set `OLLAMA_BASE_URL=http://host.docker.internal:11434`.
+   - Ensure Ollama on the host listens on `0.0.0.0:11434` (set `OLLAMA_HOST=0.0.0.0:11434` in host environment).
+2. **Containerized Ollama Service:**
+   - In Coolify or Docker Compose, enable the companion `ollama` service by passing the profile `--profile local-ai`.
+   - Set `OLLAMA_BASE_URL=http://ollama:11434`.
+3. **Remote Ollama Server:**
+   - Set `OLLAMA_BASE_URL=http://your-gpu-server-ip:11434`.
+
+---
+
+## 5. Alternative Setup: Bare-Metal Ubuntu (Non-Docker / PM2)
+
+If you are not using Coolify or Docker, you can deploy bare-metal on Ubuntu using PM2 and Nginx:
+
 ```bash
-# 1. Install PM2 globally
-npm install -g pm2
+# 1. Clone repository
+git clone https://github.com/madhurimondal89/youtube-seo.git
+cd youtube-seo
 
-# 2. Build Frontend
+# 2. Setup Python environment
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r backend/requirements.txt
+
+# 3. Setup Next.js Frontend
 cd frontend
 npm install
 npm run build
+cd ..
 
-# 3. Start Backend with PM2
-cd ../backend
-pm2 start "python -m uvicorn app.main:app --host 127.0.0.1 --port 8000" --name "yt-seo-backend"
+# 4. Generate production .env
+cp .env.example .env
+# Edit .env with your generated SECRET_KEY and settings
 
-# 4. Start Frontend with PM2
-cd ../frontend
+# 5. Start with PM2
+npm install -g pm2
+pm2 start ".venv/bin/python -m uvicorn app.main:app --app-dir backend --host 127.0.0.1 --port 8000" --name "yt-seo-backend"
+cd frontend
 pm2 start "npm start" --name "yt-seo-frontend"
-
-# 5. Save PM2 processes to auto-restart on server reboot
+cd ..
 pm2 save
 pm2 startup
 ```
 
-#### Option B: Coolify + Traefik (Hostinger KVM 4 VPS with Coolify)
-If your Hostinger VPS is running Coolify with Traefik:
-1. In Coolify Dashboard, click **Add Resource** -> **Docker Compose**.
-2. Select your repository `https://github.com/madhurimondal89/youtube-seo.git` on branch `main`.
-3. Set the Compose file path to: `docker-compose.coolify.yml`.
-4. Ensure the domain is set to `seo.freeyoutubetools.com`.
-5. Benefits of `docker-compose.coolify.yml`:
-   - Connects seamlessly to Coolify's external `coolify` network.
-   - Zero port conflicts with Traefik: host ports 80/443 and 8000 are **NOT** bound on the host.
-   - Backend port 8000 is internal-only to Docker, fully isolated from public internet.
-   - Next.js automatically rewrites `/api/*` to `http://backend:8000/api/*` internally.
-   - Automatic SSL termination via Let's Encrypt managed by Traefik.
-
----
-
-### 5. Nginx Virtual Host Configuration
-
-Create `/etc/nginx/sites-available/seo.freeyoutubetools.com`:
-
+### Nginx Virtual Host for Bare-Metal (`/etc/nginx/sites-available/seo.freeyoutubetools.com`)
 ```nginx
 server {
     listen 80;
@@ -124,7 +174,6 @@ server {
 
     client_max_body_size 15M;
 
-    # Backend API routing
     location /api/ {
         proxy_pass http://127.0.0.1:8000/api/;
         proxy_http_version 1.1;
@@ -134,10 +183,8 @@ server {
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_read_timeout 90s;
     }
 
-    # Next.js Frontend routing
     location / {
         proxy_pass http://127.0.0.1:3000;
         proxy_http_version 1.1;
@@ -151,7 +198,6 @@ server {
 }
 ```
 
-Enable the site and obtain a free SSL certificate:
 ```bash
 sudo ln -s /etc/nginx/sites-available/seo.freeyoutubetools.com /etc/nginx/sites-enabled/
 sudo nginx -t
@@ -161,9 +207,11 @@ sudo certbot --nginx -d seo.freeyoutubetools.com
 
 ---
 
-### 6. Verification Checklist
-- [x] Backend responds to `curl http://127.0.0.1:8000/health`
-- [x] Thumbnail analyzer handles up to 10MB images with 16:9 & contrast scores
-- [x] AI Growth Coach generates 30-day custom niche strategies (English/Bengali/Hindi)
-- [x] Frontend compiles with zero TypeScript errors
-- [x] Zero external mandatory database setup required
+## 6. Verification & Health Checklist
+
+- [x] Backend responds to `GET /health` with `{"status":"ok"}`.
+- [x] Backend enforces `SECRET_KEY` validation (startup aborts if missing or weak in production).
+- [x] Backend port 8000 is internal-only (not mapped to host).
+- [x] Next.js rewrites proxy `/api/*` to `backend:8000` with 0 CORS errors.
+- [x] Ollama connects cleanly via `http://host.docker.internal:11434` or container `http://ollama:11434`.
+- [x] Main domain `freeyoutubetools.com` remains 100% untouched.

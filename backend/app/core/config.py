@@ -7,7 +7,7 @@ class Settings(BaseSettings):
     app_version: str = "1.0.0"
     app_env: str = "development"
     debug: bool = False
-    secret_key: str = "youtube-seo-insecure-secret-key-change-me"
+    secret_key: str = "dev-insecure-secret-key-for-local-testing-only-32chars"
     
     # Bindings
     backend_host: str = "0.0.0.0"

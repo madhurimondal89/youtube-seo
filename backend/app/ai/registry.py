@@ -197,7 +197,41 @@ class ProviderRegistry:
         elif ptype == "openai":
             test_prov = OptionalOpenAIProvider(api_key=api_key or settings.openai_api_key or "", model=model or settings.openai_model)
         elif ptype == "ollama":
-            test_prov = LocalOllamaProvider(base_url=base_url or settings.ollama_base_url, model=model or settings.ollama_model)
+            target_url = base_url or settings.ollama_base_url
+            target_model = model or settings.ollama_model
+            test_prov = LocalOllamaProvider(base_url=target_url, model=target_model)
+            # Connectivity check via /api/tags first
+            clean_url = target_url.rstrip("/")
+            if not clean_url.startswith("http://") and not clean_url.startswith("https://"):
+                clean_url = f"http://{clean_url}"
+            try:
+                async with httpx.AsyncClient(timeout=3.5) as client:
+                    tag_resp = await client.get(f"{clean_url}/api/tags")
+                    if tag_resp.status_code != 200:
+                        return {
+                            "success": False,
+                            "provider": test_prov.get_provider_name(),
+                            "message": f"Ollama endpoint responded with HTTP {tag_resp.status_code} at {clean_url}/api/tags."
+                        }
+            except httpx.ConnectError:
+                hint = " (If running inside Docker, use 'http://host.docker.internal:11434' instead of localhost/127.0.0.1 to reach host Ollama, or 'http://ollama:11434' for a separate container service)" if ("127.0.0.1" in clean_url or "localhost" in clean_url) else ""
+                return {
+                    "success": False,
+                    "provider": test_prov.get_provider_name(),
+                    "message": f"Could not connect to Ollama server at {clean_url}{hint}."
+                }
+            except httpx.TimeoutException:
+                return {
+                    "success": False,
+                    "provider": test_prov.get_provider_name(),
+                    "message": f"Connection to Ollama server at {clean_url} timed out (3.5s)."
+                }
+            except Exception as e:
+                return {
+                    "success": False,
+                    "provider": test_prov.get_provider_name(),
+                    "message": f"Ollama connection check failed: {str(e)}"
+                }
         elif ptype == "groq":
             target_url = base_url or PROVIDER_PRESETS["groq"]["default_url"]
             target_model = model or settings.groq_model or PROVIDER_PRESETS["groq"]["default_model"]

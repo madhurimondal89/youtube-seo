@@ -6,6 +6,33 @@ YOUTUBE_VIDEO_ID_REGEX = re.compile(r"^[a-zA-Z0-9_-]{11}$")
 YOUTUBE_CHANNEL_ID_REGEX = re.compile(r"^UC[a-zA-Z0-9_-]{22}$")
 YOUTUBE_HANDLE_REGEX = re.compile(r"^@[a-zA-Z0-9_.-]{3,30}$")
 
+INSECURE_SECRET_PLACEHOLDERS = {
+    "youtube-seo-insecure-secret-key-change-me",
+    "change-this-secret-key-in-production-random-hex-string",
+    "change-this-production-key-secret",
+    "change-me",
+    "secret",
+    "password",
+    "default",
+    "123456",
+}
+
+def validate_secret_strength(secret: Optional[str]) -> tuple[bool, str]:
+    """
+    Validates that a production secret is non-empty, >= 32 characters, and not a known placeholder.
+    """
+    if not secret:
+        return False, "SECRET_KEY cannot be empty or missing."
+    clean = secret.strip()
+    if clean.lower() in INSECURE_SECRET_PLACEHOLDERS:
+        return False, "SECRET_KEY is set to a known insecure default placeholder."
+    for placeholder_term in ["change-this", "insecure", "change-me", "example", "placeholder", "dev-"]:
+        if placeholder_term in clean.lower():
+            return False, f"SECRET_KEY contains insecure keyword '{placeholder_term}'."
+    if len(clean) < 32:
+        return False, f"SECRET_KEY is too short ({len(clean)} characters). Minimum required length is 32 characters."
+    return True, "SECRET_KEY satisfies production strength requirements."
+
 def sanitize_keyword(keyword: str) -> str:
     """Strip dangerous characters and trim length."""
     clean = re.sub(r"[\r\n\t\x00-\x1f]", " ", keyword)
