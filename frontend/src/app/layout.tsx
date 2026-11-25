@@ -4,9 +4,16 @@ import Sidebar from "@/components/layout/Sidebar";
 import TopBar from "@/components/layout/TopBar";
 
 export const metadata: Metadata = {
-  title: "YouTube SEO — Self-Hosted Creator Intelligence Platform",
+  title: "TubePilot AI — Self-Hosted Creator Intelligence Platform",
   description:
     "Production-grade, transparent YouTube keyword research, competition analysis, opportunity scoring, outlier detection, and video audit platform.",
+  icons: {
+    icon: [
+      { url: "/icon.png", type: "image/png" },
+      { url: "/favicon.ico", sizes: "any" },
+    ],
+    apple: "/apple-icon.png",
+  },
 };
 
 export default function RootLayout({
@@ -17,6 +24,8 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark h-full antialiased" suppressHydrationWarning>
       <head>
+        <link rel="icon" href="/icon.png" type="image/png" />
+        <link rel="apple-touch-icon" href="/apple-icon.png" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link
