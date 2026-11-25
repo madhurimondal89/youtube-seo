@@ -15,6 +15,8 @@ import {
   Info,
   UserCheck,
   CheckCircle2,
+  KeyRound,
+  BookOpen,
 } from "lucide-react";
 import ScoreGauge from "@/components/common/ScoreGauge";
 import DataProvenanceBadge from "@/components/common/DataProvenanceBadge";
@@ -73,47 +75,108 @@ export default function DashboardPage() {
   return (
     <div className="max-w-7xl mx-auto space-y-8">
       {/* Hero Welcome & Quick Launch */}
-      <div className="rounded-xl bg-[var(--color-paper-2)] p-8 border border-[var(--color-rule)]">
-        <div className="max-w-2xl space-y-4">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="px-2.5 py-0.5 rounded text-xs bg-[var(--color-paper-3)] border border-[var(--color-rule)] text-[var(--color-muted)]">
-              Independent
-            </span>
-            <span className="px-2.5 py-0.5 rounded text-xs bg-[var(--color-paper-3)] border border-[var(--color-rule)] text-[var(--color-muted)]">
-              Transparent
-            </span>
-            <span className="px-2.5 py-0.5 rounded text-xs bg-[var(--color-paper-3)] border border-[var(--color-rule)] text-[var(--color-muted)]">
-              No paid API required
-            </span>
+      <div className="rounded-xl bg-[var(--color-paper-2)] p-6 sm:p-8 border border-[var(--color-rule)]">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+          {/* Left Column: Hero Text & Search */}
+          <div className="lg:col-span-7 space-y-4">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="px-2.5 py-0.5 rounded text-xs bg-[var(--color-paper-3)] border border-[var(--color-rule)] text-[var(--color-muted)]">
+                Independent
+              </span>
+              <span className="px-2.5 py-0.5 rounded text-xs bg-[var(--color-paper-3)] border border-[var(--color-rule)] text-[var(--color-muted)]">
+                Transparent
+              </span>
+              <span className="px-2.5 py-0.5 rounded text-xs bg-[var(--color-paper-3)] border border-[var(--color-rule)] text-[var(--color-muted)]">
+                No paid API required
+              </span>
+            </div>
+
+            <h1 className="text-3xl sm:text-4xl font-medium tracking-[-0.03em] text-[var(--color-ink)]">
+              YouTube creator intelligence and search optimization
+            </h1>
+
+            <p className="text-sm text-[var(--color-muted)] leading-relaxed">
+              Stateless keyword research, statistical competition analysis, 0-100 opportunity scoring, and 18-point SEO audits on your server.
+            </p>
+
+            <form onSubmit={handleLaunchResearch} className="pt-2 flex flex-col sm:flex-row gap-3">
+              <div className="relative flex-1">
+                <Search className="w-4 h-4 text-[var(--color-muted)] absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <input
+                  type="text"
+                  value={seed}
+                  onChange={(e) => setSeed(e.target.value)}
+                  placeholder="Enter seed topic (e.g. 'faceless youtube automation', 'davinci resolve')..."
+                  className="w-full bg-[var(--color-paper-3)] border border-[var(--color-rule)] rounded-md pl-11 pr-4 py-3 text-sm text-[var(--color-ink)] placeholder-[var(--color-muted)] focus:outline-none focus:border-[var(--color-rule-2)] focus:ring-1 focus:ring-[var(--color-focus)] transition-colors duration-150"
+                />
+              </div>
+              <button
+                type="submit"
+                className="px-6 py-3 rounded-md bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/90 text-[var(--color-accent-ink)] font-medium text-sm flex items-center justify-center gap-2 transition-colors duration-150 shrink-0"
+              >
+                <span>Explore keywords</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </form>
           </div>
 
-          <h1 className="text-3xl sm:text-4xl font-medium tracking-[-0.03em] text-[var(--color-ink)]">
-            YouTube creator intelligence and search optimization
-          </h1>
+          {/* Right Column: API Integration & Setup Guide Card */}
+          <div className="lg:col-span-5">
+            <div className="rounded-xl bg-[var(--color-paper-3)] border border-[var(--color-rule)] p-5 space-y-4 hover:border-[var(--color-accent)]/50 transition-all duration-200 shadow-sm">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-[var(--color-accent)]/10 text-[var(--color-accent)] flex items-center justify-center">
+                    <KeyRound className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--color-ink)]">
+                      API Integration Guide
+                    </h3>
+                    <p className="text-[11px] text-[var(--color-muted)]">Official YouTube & Free AI</p>
+                  </div>
+                </div>
+                <span className="px-2 py-0.5 rounded text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium">
+                  100% Optional
+                </span>
+              </div>
 
-          <p className="text-sm text-[var(--color-muted)] leading-relaxed">
-            Stateless keyword research, statistical competition analysis, 0-100 opportunity scoring, and 18-point SEO audits on your server.
-          </p>
+              <div className="space-y-2 text-xs text-[var(--color-muted)]">
+                <p className="leading-relaxed text-[11px]">
+                  Want higher rate limits and deeper AI Studio suggestions? Connect your own free keys:
+                </p>
+                <div className="space-y-1.5 pl-0.5 pt-0.5">
+                  <div className="flex items-center gap-2 text-[var(--color-ink)] text-xs">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-red-500 shrink-0" />
+                    <span><strong>YouTube API v3:</strong> Free 10,000 units/day</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-[var(--color-ink)] text-xs">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+                    <span><strong>Google Gemini:</strong> Free cloud AI (15 RPM)</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-[var(--color-ink)] text-xs">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+                    <span><strong>Ollama / Local:</strong> Zero-cost private AI</span>
+                  </div>
+                </div>
+              </div>
 
-          <form onSubmit={handleLaunchResearch} className="pt-2 flex flex-col sm:flex-row gap-3">
-            <div className="relative flex-1">
-              <Search className="w-4 h-4 text-[var(--color-muted)] absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
-              <input
-                type="text"
-                value={seed}
-                onChange={(e) => setSeed(e.target.value)}
-                placeholder="Enter seed topic (e.g. 'faceless youtube automation', 'davinci resolve')..."
-                className="w-full bg-[var(--color-paper-3)] border border-[var(--color-rule)] rounded-md pl-11 pr-4 py-3 text-sm text-[var(--color-ink)] placeholder-[var(--color-muted)] focus:outline-none focus:border-[var(--color-rule-2)] focus:ring-1 focus:ring-[var(--color-focus)] transition-colors duration-150"
-              />
+              <div className="pt-1 flex flex-col sm:flex-row gap-2">
+                <Link
+                  href="/api-setup"
+                  className="flex-1 py-2 px-3 rounded-md bg-[var(--color-paper-2)] border border-[var(--color-rule-2)] hover:border-[var(--color-accent)] text-xs font-medium text-[var(--color-ink)] flex items-center justify-center gap-1.5 transition-colors"
+                >
+                  <BookOpen className="w-3.5 h-3.5 text-[var(--color-accent)]" />
+                  <span>How to Add API (Guide)</span>
+                </Link>
+                <Link
+                  href="/settings"
+                  className="py-2 px-3.5 rounded-md bg-[var(--color-paper-2)] hover:bg-[var(--color-paper-1)] border border-[var(--color-rule)] text-xs text-[var(--color-muted)] hover:text-[var(--color-ink)] flex items-center justify-center transition-colors"
+                >
+                  <span>Settings</span>
+                </Link>
+              </div>
             </div>
-            <button
-              type="submit"
-              className="px-6 py-3 rounded-md bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/90 text-[var(--color-accent-ink)] font-medium text-sm flex items-center justify-center gap-2 transition-colors duration-150"
-            >
-              <span>Explore keywords</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
-          </form>
+          </div>
         </div>
       </div>
 

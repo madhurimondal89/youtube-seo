@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Link from "next/link";
 import {
   Settings as SettingsIcon,
   Cpu,
@@ -14,6 +15,7 @@ import {
   ExternalLink,
   Terminal,
   Activity,
+  BookOpen,
 } from "lucide-react";
 import { fetchSettings, saveSettings, testAiConnection, AppSettings } from "@/lib/api";
 
@@ -168,11 +170,20 @@ export default function SettingsPage() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">AI Models &amp; Platform Settings</h1>
-        <p className="text-xs sm:text-sm text-slate-400">
-          Connect any AI brain (Local LM Studio, Ollama, DeepSeek, Groq, Gemini, OpenAI, or custom endpoints) and configure data sources.
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">AI Models &amp; Platform Settings</h1>
+          <p className="text-xs sm:text-sm text-slate-400 mt-0.5">
+            Connect any AI brain (Local LM Studio, Ollama, DeepSeek, Groq, Gemini, OpenAI) and configure YouTube Data API.
+          </p>
+        </div>
+        <Link
+          href="/api-setup"
+          className="px-3.5 py-2 rounded-lg bg-[var(--color-paper-2)] border border-[var(--color-rule-2)] hover:border-[var(--color-accent)] text-xs text-[var(--color-ink)] hover:text-[var(--color-accent)] font-medium flex items-center gap-1.5 self-start sm:self-auto transition-colors"
+        >
+          <BookOpen className="w-3.5 h-3.5 text-[var(--color-accent)]" />
+          <span>API Setup Guide</span>
+        </Link>
       </div>
 
       <form onSubmit={handleSave} className="space-y-6">

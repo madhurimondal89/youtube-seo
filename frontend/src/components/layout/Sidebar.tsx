@@ -20,6 +20,7 @@ import {
   Settings,
   Image as ImageIcon,
   GraduationCap,
+  KeyRound,
 } from "lucide-react";
 
 const NAV_ITEMS = [
@@ -36,6 +37,7 @@ const NAV_ITEMS = [
   { name: "Growth Coach", href: "/growth-coach", icon: GraduationCap },
   { name: "Content Calendar", href: "/calendar", icon: Calendar },
   { name: "Reports", href: "/reports", icon: FileText },
+  { name: "API Guide", href: "/api-setup", icon: KeyRound },
   { name: "Settings", href: "/settings", icon: Settings },
 ];
 
