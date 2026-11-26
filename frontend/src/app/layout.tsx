@@ -3,7 +3,7 @@ import "./globals.css";
 import Sidebar from "@/components/layout/Sidebar";
 import TopBar from "@/components/layout/TopBar";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://tubepilot.ai";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://seo.freeyoutubetools.com";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
