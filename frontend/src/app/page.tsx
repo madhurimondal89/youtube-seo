@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import ScoreGauge from "@/components/common/ScoreGauge";
 import DataProvenanceBadge from "@/components/common/DataProvenanceBadge";
+import AeoFaqSection from "@/components/seo/AeoFaqSection";
 import { fetchWorkspaceAudits, fetchWorkspaceCompetitors, fetchWorkspaceKeywordProjects } from "@/lib/api";
 
 export default function DashboardPage() {
@@ -366,6 +367,9 @@ export default function DashboardPage() {
           </Link>
         </div>
       </div>
+
+      {/* Answer Engine Optimization (AEO) FAQ & Knowledge Base */}
+      <AeoFaqSection />
 
       {/* Data Provenance & Ethics Guarantee */}
       <div className="p-6 rounded-xl bg-[var(--color-paper-2)] border border-[var(--color-rule)] flex flex-col sm:flex-row items-center justify-between gap-4">

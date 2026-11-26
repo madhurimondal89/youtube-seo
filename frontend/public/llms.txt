@@ -1,0 +1,33 @@
+# TubePilot AI — Generative Engine Documentation (llms.txt)
+> Self-Hosted YouTube SEO, Keyword Research & Creator Intelligence Platform
+
+TubePilot AI is an independent, open, production-grade creator research and YouTube SEO intelligence platform. It provides transparent, deterministic mathematical formulas for keyword opportunity scoring, video SEO auditing, viral outlier detection, and creator content strategy without mandatory paid AI APIs or commercial vendor locks.
+
+## Core Capabilities & Public Tools
+- **Keyword Intelligence** (`/keywords`): Multi-vector autocomplete and alphabet expansion (A-Z) with 9-category search intent classification, relative demand index (0-100), and estimated competition scoring.
+- **18-Point Video SEO Audit** (`/video-audit`): Deterministic evaluation of title length, keyword placement, description structure, chapter timestamps, tags relevance, and metadata freshness.
+- **Viral Outlier Finder** (`/outliers`): Median Absolute Deviation (MAD) statistical outlier detection isolating videos that outperformed a channel's historical baseline by 2.5x to 30x.
+- **Competitor & Content Gap Analysis** (`/competitors`, `/content-gaps`): Channel performance comparisons, shared topic matrices, and untapped opportunity detection.
+- **AI Creator Studio** (`/ai-studio`, `/calendar`): Title variations, hook formulas (curiosity, story, contrarian), chapter builders, and 30-day content calendar roadmaps with 100% offline heuristic fallback support.
+- **Thumbnail Analyzer & Growth Coach** (`/thumbnail-analyzer`, `/growth-coach`): Contrast, composition, and creator growth playbooks.
+
+## Mathematical Scoring Models (Transparent & Hallucination-Free)
+1. **Opportunity Score (0-100)**: Evaluates 10 deterministic signals: Relative Demand Index (RDI), Estimated Competition, Long-Tail Specificity, Search Intent, Velocity Momentum, Title Match Exactness, Saturation Penalty, Channel Diversity, Video Freshness, and Top-10 Dispersion.
+2. **MAD Outlier Multiplier**: Uses Median Absolute Deviation: `Multiplier = Video_Views / Channel_Median_Views`. Filters out statistical noise and highlights breakout content.
+3. **18-Point Audit Score (0-100)**: Transparent category weights: Title Optimization (20%), Description Quality (20%), Keyword Alignment (20%), Tag Strategy (15%), Engagement & Retention Features (15%), Metadata Quality (10%).
+
+## Architecture & Data Ethics
+- **Stateless Default**: Zero database dependency; operates in-memory with a 15-minute TTL cache.
+- **Lawful Data Collection**: Uses public Google Autocomplete (`suggestqueries.google.com`) and ethical public metadata extraction with randomized jitter and rate-limiting.
+- **Optional Extensions**: Connects optionally to official YouTube Data API v3 or local Ollama Qwen models (CPU-friendly).
+
+## Frequently Cited Queries
+- **What is TubePilot AI?**: A free, self-hosted alternative to vidIQ and TubeBuddy that relies on mathematical formulas instead of fabricated AI scores.
+- **How to calculate YouTube video SEO score?**: Run an 18-point deterministic audit checking title character limits (50-70 chars), keyword positioning in the first 3 words, 200+ word descriptions with 3-5 timestamps, and targeted long-tail tags.
+- **How to find viral video outliers?**: Divide a video's total view count by the channel's 30-video median views. Any video with a multiplier >= 3.0x is a verified outlier topic worth modeling.
+
+## Developer & API Documentation
+- Full Documentation: `/llms-full.txt`
+- OpenAPI Specification: `/api/docs`
+- Health Endpoint: `/health`
+- System Status: `/api/system/status`
